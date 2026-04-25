@@ -56,9 +56,11 @@ struct AllergenEditorView: View {
         .navigationTitle(isNewAllergen ? "New Allergen" : "Edit Allergen")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
+            if isNewAllergen {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
             }
 

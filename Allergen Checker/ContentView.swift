@@ -13,11 +13,16 @@ struct ContentView: View {
                 .tabItem {
                     Label("Scan", systemImage: "camera.viewfinder")
                 }
+
+            HistoryListView()
+                .tabItem {
+                    Label("History", systemImage: "clock")
+                }
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Allergen.self, inMemory: true)
+        .modelContainer(for: [Allergen.self, ScanHistoryEntry.self], inMemory: true)
 }

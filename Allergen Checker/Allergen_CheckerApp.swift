@@ -13,6 +13,7 @@ struct Allergen_CheckerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Allergen.self,
+            ScanHistoryEntry.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

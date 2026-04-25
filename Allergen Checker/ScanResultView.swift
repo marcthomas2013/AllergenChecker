@@ -1,10 +1,17 @@
 import SwiftUI
+import SwiftData
 import UIKit
 
 struct ScanResultView: View {
+    @Environment(\.modelContext) private var modelContext
+
     let result: ScanResult
+    var allowsSaving = true
 
     private let explanationService = LocalMatchExplanationService()
+
+    @State private var isSaved = false
+    @State private var saveError: String?
 
     private var hasMatches: Bool {
         !result.matches.isEmpty
@@ -15,7 +22,7 @@ struct ScanResultView: View {
             VStack(alignment: .leading, spacing: 20) {
                 statusCard
 
-                HighlightedImageView(
+                ZoomableHighlightedImageView(
                     image: result.image,
                     matches: result.matches
                 )
@@ -30,6 +37,14 @@ struct ScanResultView: View {
                 recognizedTextSection
             }
             .padding()
+        }
+        .alert("Could Not Save Scan", isPresented: Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveError ?? "The scan could not be saved.")
         }
     }
 
@@ -47,10 +62,33 @@ struct ScanResultView: View {
                  ? "Review the highlighted label areas before deciding whether the product is safe for you."
                  : "No text matched your saved allergen names or aliases.")
                 .foregroundStyle(.secondary)
+
+            if allowsSaving {
+                Button {
+                    saveScan()
+                } label: {
+                    Label(isSaved ? "Saved to History" : "Save Scan to History", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isSaved)
+                .padding(.top, 8)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func saveScan() {
+        do {
+            let entry = try ScanHistoryEntry(result: result)
+            modelContext.insert(entry)
+            try modelContext.save()
+            isSaved = true
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 
     private var matchesSection: some View {
@@ -101,6 +139,67 @@ struct ScanResultView: View {
                 }
             }
         }
+    }
+}
+
+private struct ZoomableHighlightedImageView: View {
+    let image: UIImage
+    let matches: [AllergenMatch]
+
+    @State private var scale: CGFloat = 1
+    @State private var lastScale: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    var body: some View {
+        HighlightedImageView(image: image, matches: matches)
+            .scaleEffect(scale)
+            .offset(offset)
+            .gesture(
+                MagnificationGesture()
+                    .onChanged { value in
+                        scale = min(max(lastScale * value, 1), 6)
+                    }
+                    .onEnded { _ in
+                        lastScale = scale
+                        if scale == 1 {
+                            offset = .zero
+                            lastOffset = .zero
+                        }
+                    }
+            )
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        guard scale > 1 else {
+                            return
+                        }
+
+                        offset = CGSize(
+                            width: lastOffset.width + value.translation.width,
+                            height: lastOffset.height + value.translation.height
+                        )
+                    }
+                    .onEnded { _ in
+                        lastOffset = offset
+                    }
+            )
+            .onTapGesture(count: 2) {
+                withAnimation {
+                    scale = 1
+                    lastScale = 1
+                    offset = .zero
+                    lastOffset = .zero
+                }
+            }
+            .clipped()
+            .overlay(alignment: .bottomTrailing) {
+                Label("Pinch to zoom", systemImage: "plus.magnifyingglass")
+                    .font(.caption)
+                    .padding(8)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(8)
+            }
     }
 }
 
