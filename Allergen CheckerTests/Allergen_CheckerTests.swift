@@ -61,4 +61,54 @@ struct Allergen_CheckerTests {
         #expect(matches.count == 1)
     }
 
+    @MainActor
+    @Test func singularAllergenMatchesPluralText() {
+        let allergen = Allergen(name: "Egg")
+        let textBlocks = [
+            RecognizedTextBlock(
+                text: "Ingredients: eggs, flour, sugar",
+                confidence: 0.95,
+                boundingBox: .zero
+            )
+        ]
+
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: [allergen])
+
+        #expect(matches.count == 1)
+        #expect(matches.first?.allergenName == "Egg")
+    }
+
+    @MainActor
+    @Test func pluralAllergenMatchesSingularText() {
+        let allergen = Allergen(name: "Peanuts")
+        let textBlocks = [
+            RecognizedTextBlock(
+                text: "May contain peanut",
+                confidence: 0.95,
+                boundingBox: .zero
+            )
+        ]
+
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: [allergen])
+
+        #expect(matches.count == 1)
+        #expect(matches.first?.allergenName == "Peanuts")
+    }
+
+    @MainActor
+    @Test func phraseAllergenPluralizesLastWord() {
+        let allergen = Allergen(name: "Tree nut")
+        let textBlocks = [
+            RecognizedTextBlock(
+                text: "May contain tree nuts",
+                confidence: 0.95,
+                boundingBox: .zero
+            )
+        ]
+
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: [allergen])
+
+        #expect(matches.count == 1)
+    }
+
 }

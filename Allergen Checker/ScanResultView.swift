@@ -152,9 +152,16 @@ private struct ZoomableHighlightedImageView: View {
     @State private var lastOffset: CGSize = .zero
 
     var body: some View {
-        HighlightedImageView(image: image, matches: matches)
-            .scaleEffect(scale)
-            .offset(offset)
+        GeometryReader { proxy in
+            ZStack {
+                HighlightedImageView(image: image, matches: matches)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .scaleEffect(scale)
+                    .offset(offset)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .contentShape(Rectangle())
+            .clipped()
             .gesture(
                 MagnificationGesture()
                     .onChanged { value in
@@ -192,7 +199,6 @@ private struct ZoomableHighlightedImageView: View {
                     lastOffset = .zero
                 }
             }
-            .clipped()
             .overlay(alignment: .bottomTrailing) {
                 Label("Pinch to zoom", systemImage: "plus.magnifyingglass")
                     .font(.caption)
@@ -200,6 +206,7 @@ private struct ZoomableHighlightedImageView: View {
                     .background(.regularMaterial, in: Capsule())
                     .padding(8)
             }
+        }
     }
 }
 
