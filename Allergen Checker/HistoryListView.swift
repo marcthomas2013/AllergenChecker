@@ -99,7 +99,13 @@ private struct HistoryRow: View {
 }
 
 private struct HistoryDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Allergen.name) private var allergens: [Allergen]
+
     let entry: ScanHistoryEntry
+
+    @State private var rescanError: String?
+    @State private var didRescan = false
 
     var body: some View {
         Group {
@@ -115,6 +121,54 @@ private struct HistoryDetailView: View {
         }
         .navigationTitle(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    rescan()
+                } label: {
+                    Label("Rescan", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .disabled(allergens.isEmpty)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if didRescan {
+                Label("History updated using your current allergens.", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                    .padding(10)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.bottom, 8)
+            }
+        }
+        .alert("Could Not Rescan", isPresented: Binding(
+            get: { rescanError != nil },
+            set: { if !$0 { rescanError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(rescanError ?? "The saved scan could not be rescanned.")
+        }
+    }
+
+    private func rescan() {
+        do {
+            try entry.rescan(using: allergens)
+            try modelContext.save()
+
+            withAnimation {
+                didRescan = true
+            }
+
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                withAnimation {
+                    didRescan = false
+                }
+            }
+        } catch {
+            rescanError = error.localizedDescription
+        }
     }
 }
 

@@ -7,6 +7,7 @@ struct ScanView: View {
     @Query(sort: \Allergen.name) private var allergens: [Allergen]
 
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var isAddingAllergen = false
     @State private var isShowingCamera = false
     @State private var isScanning = false
     @State private var scanResult: ScanResult?
@@ -18,11 +19,7 @@ struct ScanView: View {
         NavigationStack {
             Group {
                 if allergens.isEmpty {
-                    ContentUnavailableView(
-                        "Add Allergens First",
-                        systemImage: "list.bullet.clipboard",
-                        description: Text("Save the ingredients you need to avoid before scanning a label.")
-                    )
+                    noAllergensView
                 } else if let scanResult {
                     ScanResultView(result: scanResult)
                 } else {
@@ -66,6 +63,11 @@ struct ScanView: View {
                     scan(image)
                 }
             }
+            .sheet(isPresented: $isAddingAllergen) {
+                NavigationStack {
+                    AllergenEditorView()
+                }
+            }
             .onChange(of: selectedPhoto) { _, newValue in
                 guard let newValue else {
                     return
@@ -76,6 +78,24 @@ struct ScanView: View {
                 }
             }
         }
+    }
+
+    private var noAllergensView: some View {
+        VStack(spacing: 20) {
+            ContentUnavailableView(
+                "Add Allergens First",
+                systemImage: "list.bullet.clipboard",
+                description: Text("Save the ingredients you need to avoid before scanning a label.")
+            )
+
+            Button {
+                isAddingAllergen = true
+            } label: {
+                Label("Add Allergen", systemImage: "plus")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
     }
 
     private var scanPrompt: some View {

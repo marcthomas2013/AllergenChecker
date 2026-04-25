@@ -29,14 +29,26 @@ final class ScanHistoryEntry {
             throw ScanHistoryError.invalidImageData
         }
 
-        let textBlocks = try JSONDecoder()
-            .decode([ScanTextBlockSnapshot].self, from: textBlocksData)
-            .map(\.recognizedTextBlock)
+        let textBlocks = try recognizedTextBlocks()
         let matches = try JSONDecoder()
             .decode([ScanMatchSnapshot].self, from: matchesData)
             .map(\.allergenMatch)
 
         return ScanResult(image: image, textBlocks: textBlocks, matches: matches)
+    }
+
+    func rescan(using allergens: [Allergen]) throws {
+        let textBlocks = try recognizedTextBlocks()
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: allergens)
+
+        matchesData = try JSONEncoder().encode(matches.map(ScanMatchSnapshot.init))
+        matchCount = matches.count
+    }
+
+    private func recognizedTextBlocks() throws -> [RecognizedTextBlock] {
+        try JSONDecoder()
+            .decode([ScanTextBlockSnapshot].self, from: textBlocksData)
+            .map(\.recognizedTextBlock)
     }
 }
 
