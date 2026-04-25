@@ -132,8 +132,37 @@ struct ScanView: View {
                 .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera))
             }
             .controlSize(.large)
+
+            allergenSearchSummary
         }
         .padding()
+    }
+
+    private var allergenSearchSummary: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Searching for", systemImage: "magnifyingglass")
+                .font(.headline)
+
+            Text(searchSummaryText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var searchSummaryText: String {
+        allergens
+            .map { allergen in
+                if allergen.aliases.isEmpty {
+                    return allergen.name
+                }
+
+                return "\(allergen.name) (\(allergen.aliases.joined(separator: ", ")))"
+            }
+            .joined(separator: "; ")
     }
 
     private func loadAndScanPhoto(_ item: PhotosPickerItem) async {
