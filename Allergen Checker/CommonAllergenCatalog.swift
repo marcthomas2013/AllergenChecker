@@ -63,4 +63,34 @@ enum CommonAllergenCatalog {
         CommonAllergen(name: "Walnuts", aliases: ["walnut"]),
         CommonAllergen(name: "Wheat", aliases: ["bran", "bulgur", "couscous", "durum", "semolina"])
     ]
+
+    static let eNumberIngredients: [CommonAllergen] = [
+        CommonAllergen(name: "Sulphites (E220-E228)", aliases: ["sulphur dioxide", "sulfur dioxide", "sulphite", "sulphites", "sulfite", "sulfites"] + eNumberAliases("E220", "E221", "E222", "E223", "E224", "E225", "E226", "E227", "E228")),
+        CommonAllergen(name: "Lecithins (E322)", aliases: ["lecithin", "egg lecithin", "soya lecithin", "soy lecithin", "sunflower lecithin"] + eNumberAliases("E322")),
+        CommonAllergen(name: "Gelatine (E441)", aliases: ["gelatin", "gelatine", "beef gelatine", "fish gelatine", "pork gelatine"] + eNumberAliases("E441")),
+        CommonAllergen(name: "Cochineal and carmine (E120)", aliases: ["cochineal", "carmine", "carminic acid"] + eNumberAliases("E120")),
+        CommonAllergen(name: "Carotenes (E160a)", aliases: ["carotene", "carotenes", "alpha-carotene", "beta-carotene"] + eNumberAliases("E160a")),
+        CommonAllergen(name: "Annatto (E160b)", aliases: ["annatto", "bixin", "norbixin"] + eNumberAliases("E160b")),
+        CommonAllergen(name: "Paprika extract (E160c)", aliases: ["paprika", "paprika extract", "capsanthin", "capsorubin"] + eNumberAliases("E160c")),
+        CommonAllergen(name: "Lycopene (E160d)", aliases: ["lycopene"] + eNumberAliases("E160d")),
+        CommonAllergen(name: "Beta-apo-carotenals (E160e-E160f)", aliases: ["beta-apo-8'-carotenal", "ethyl ester of beta-apo-8'-carotenoic acid"] + eNumberAliases("E160e", "E160f")),
+        CommonAllergen(name: "Tocopherols (E306-E309)", aliases: ["tocopherol", "tocopherols", "vitamin e"] + eNumberAliases("E306", "E307", "E308", "E309")),
+        CommonAllergen(name: "Azo and warning food colours", aliases: ["tartrazine", "quinoline yellow", "sunset yellow", "carmoisine", "azorubine", "ponceau 4r", "allura red"] + eNumberAliases("E102", "E104", "E110", "E122", "E124", "E129")),
+        CommonAllergen(name: "Benzoates (E210-E219)", aliases: ["benzoic acid", "benzoate", "benzoates", "sodium benzoate", "potassium benzoate", "calcium benzoate"] + eNumberAliases("E210", "E211", "E212", "E213", "E214", "E215", "E216", "E217", "E218", "E219")),
+        CommonAllergen(name: "Sorbates (E200-E203)", aliases: ["sorbic acid", "sorbate", "sorbates", "potassium sorbate", "calcium sorbate"] + eNumberAliases("E200", "E201", "E202", "E203")),
+        CommonAllergen(name: "Nitrates and nitrites (E249-E252)", aliases: ["nitrite", "nitrites", "nitrate", "nitrates", "potassium nitrite", "sodium nitrite", "sodium nitrate", "potassium nitrate"] + eNumberAliases("E249", "E250", "E251", "E252")),
+        CommonAllergen(name: "Glutamates and MSG (E620-E625)", aliases: ["glutamic acid", "glutamate", "glutamates", "monosodium glutamate", "msg"] + eNumberAliases("E620", "E621", "E622", "E623", "E624", "E625")),
+        CommonAllergen(name: "Modified starches (E1404-E1452)", aliases: ["modified starch", "oxidised starch", "monostarch phosphate", "distarch phosphate", "phosphated distarch phosphate", "acetylated distarch phosphate", "hydroxypropyl starch", "hydroxypropyl distarch phosphate", "starch sodium octenyl succinate", "acetylated oxidised starch"] + eNumberAliases("E1404", "E1410", "E1412", "E1413", "E1414", "E1420", "E1422", "E1440", "E1442", "E1450", "E1451", "E1452")),
+        CommonAllergen(name: "Guar gum (E412)", aliases: ["guar", "guar gum"] + eNumberAliases("E412")),
+        CommonAllergen(name: "Locust bean gum (E410)", aliases: ["carob gum", "locust bean gum"] + eNumberAliases("E410")),
+        CommonAllergen(name: "Acacia gum (E414)", aliases: ["acacia", "gum arabic", "acacia gum"] + eNumberAliases("E414")),
+        CommonAllergen(name: "Carrageenan (E407)", aliases: ["carrageenan", "carrageenin"] + eNumberAliases("E407")),
+        CommonAllergen(name: "Lysozyme (E1105)", aliases: ["lysozyme", "egg lysozyme"] + eNumberAliases("E1105"))
+    ]
+
+    private static func eNumberAliases(_ codes: String...) -> [String] {
+        codes.flatMap { code in
+            [code, code.replacingOccurrences(of: "E", with: "E ")]
+        }
+    }
 }

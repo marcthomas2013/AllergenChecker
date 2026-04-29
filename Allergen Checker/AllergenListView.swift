@@ -12,20 +12,40 @@ struct AllergenListView: View {
         Set(allergens.map { AllergenMatcher.normalizedSearchString($0.name) })
     }
 
-    private var quickAddAllergens: [CommonAllergen] {
-        CommonAllergenCatalog.allergens.filter { commonAllergen in
+    private var quickAddCommonAllergens: [CommonAllergen] {
+        availableQuickAddAllergens(from: CommonAllergenCatalog.allergens)
+    }
+
+    private var quickAddENumberIngredients: [CommonAllergen] {
+        availableQuickAddAllergens(from: CommonAllergenCatalog.eNumberIngredients)
+    }
+
+    private var filteredQuickAddCommonAllergens: [CommonAllergen] {
+        filteredQuickAddAllergens(from: quickAddCommonAllergens)
+    }
+
+    private var filteredQuickAddENumberIngredients: [CommonAllergen] {
+        filteredQuickAddAllergens(from: quickAddENumberIngredients)
+    }
+
+    private var hasFilteredQuickAddSuggestions: Bool {
+        !filteredQuickAddCommonAllergens.isEmpty || !filteredQuickAddENumberIngredients.isEmpty
+    }
+
+    private func availableQuickAddAllergens(from catalog: [CommonAllergen]) -> [CommonAllergen] {
+        catalog.filter { commonAllergen in
             !savedAllergenNames.contains(AllergenMatcher.normalizedSearchString(commonAllergen.name))
         }
     }
 
-    private var filteredQuickAddAllergens: [CommonAllergen] {
+    private func filteredQuickAddAllergens(from allergens: [CommonAllergen]) -> [CommonAllergen] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !query.isEmpty else {
-            return quickAddAllergens
+            return allergens
         }
 
-        return quickAddAllergens.filter { allergen in
+        return allergens.filter { allergen in
             allergen.name.localizedCaseInsensitiveContains(query)
                 || allergen.aliases.contains { $0.localizedCaseInsensitiveContains(query) }
         }
@@ -59,7 +79,7 @@ struct AllergenListView: View {
                         }
                         .onDelete(perform: deleteAllergens)
                     }
-                } else if !searchText.isEmpty && filteredQuickAddAllergens.isEmpty {
+                } else if !searchText.isEmpty && !hasFilteredQuickAddSuggestions {
                     ContentUnavailableView.search(text: searchText)
                 } else if allergens.isEmpty {
                     Section {
@@ -71,11 +91,11 @@ struct AllergenListView: View {
                 }
 
                 Section {
-                    if filteredQuickAddAllergens.isEmpty {
-                        Text(quickAddAllergens.isEmpty ? "All common allergens have been added." : "No common allergens match this search.")
+                    if filteredQuickAddCommonAllergens.isEmpty {
+                        Text(quickAddCommonAllergens.isEmpty ? "All common allergens have been added." : "No common allergens match this search.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(filteredQuickAddAllergens) { allergen in
+                        ForEach(filteredQuickAddCommonAllergens) { allergen in
                             QuickAddAllergenRow(allergen: allergen) {
                                 addCommonAllergen(allergen)
                             }
@@ -85,6 +105,23 @@ struct AllergenListView: View {
                     Text("Quick Add Common Allergens")
                 } footer: {
                     Text("This list uses the common UK/EU major allergen categories. You can still add anything specific to you with the plus button.")
+                }
+
+                Section {
+                    if filteredQuickAddENumberIngredients.isEmpty {
+                        Text(quickAddENumberIngredients.isEmpty ? "All E-number ingredients have been added." : "No E-number ingredients match this search.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(filteredQuickAddENumberIngredients) { allergen in
+                            QuickAddAllergenRow(allergen: allergen) {
+                                addCommonAllergen(allergen)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Quick Add E-Number Ingredients")
+                } footer: {
+                    Text("Some ingredients and additives are often listed by E number. Add the ones relevant to your allergy or sensitivity profile.")
                 }
             }
             .navigationTitle("Allergens")
