@@ -8,6 +8,7 @@ The app stores your allergens on device, uses Apple Vision to extract text from 
 
 - Maintain a personal allergen list.
 - Add, edit, delete, and search allergens.
+- Quickly add common food allergens from a built-in practical catalog.
 - Store aliases or related ingredient names for each allergen.
 - Scan ingredient labels from the camera or photo library.
 - Run on-device OCR using Apple Vision.
@@ -70,7 +71,7 @@ xcodebuild test -project "Allergen Checker.xcodeproj" -scheme "Allergen Checker"
 
 ## Current Limitations
 
-- Matching is based on saved allergen names and aliases, not a medical ingredient database.
+- Matching is based on saved allergen names and aliases. The built-in catalog is a practical starter list, not a complete medical ingredient database.
 - Highlight boxes depend on Vision OCR bounding boxes and may be imprecise on curved, blurry, or angled labels.
 - The camera path must be tested on a physical device because simulator camera support is limited.
 - AI-style ingredient interpretation is not connected to a cloud service yet, but the explanation/matching layer is separated so it can be extended later.

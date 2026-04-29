@@ -6,9 +6,5 @@
 	<string>Allergen Checker uses the camera to scan ingredient labels for allergens you have saved.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allergen Checker can scan ingredient label photos you choose from your photo library.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 </dict>
 </plist>
