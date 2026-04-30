@@ -22,6 +22,8 @@ struct ScanResultView: View {
             VStack(alignment: .leading, spacing: 20) {
                 statusCard
 
+                safetyWarningCard
+
                 ZoomableHighlightedImageView(
                     image: result.image,
                     matches: result.matches
@@ -78,6 +80,30 @@ struct ScanResultView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var safetyWarningCard: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(SafetyDisclaimer.title)
+                    .font(.headline)
+
+                Text(SafetyDisclaimer.message)
+                    .font(.subheadline)
+            }
+        } icon: {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+        }
+        .foregroundStyle(.orange)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color.orange.opacity(0.16), in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.orange, lineWidth: 1)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private func saveScan() {
