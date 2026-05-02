@@ -10,6 +10,10 @@ Built for everyday shopping, travel, and label checking, Allergen Checker keeps 
 
 Scan ingredient labels, highlight possible allergen matches, save profiles and history, and translate allergy lists for travel.
 
+## Keywords
+
+allergy, allergen, food allergy, ingredients, label scanner, barcode, OCR, E numbers, additives, travel, intolerance, shopping, safety
+
 ## Features
 
 - Scan ingredient labels using the camera or photo library.
