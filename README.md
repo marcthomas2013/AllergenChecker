@@ -6,6 +6,10 @@ Add your personal allergy profile, save allergens and aliases, then scan a produ
 
 Built for everyday shopping, travel, and label checking, Allergen Checker keeps your saved allergens, scan history, and allergy lists close at hand.
 
+## Promotional Text
+
+Scan ingredient labels, highlight possible allergen matches, save profiles and history, and translate allergy lists for travel.
+
 ## Features
 
 - Scan ingredient labels using the camera or photo library.
