@@ -28,6 +28,12 @@ struct ContentView: View {
                 }
                 .tag(AppTab.allergens)
 
+            AllergenSummaryView()
+                .tabItem {
+                    Label("My Allergies", systemImage: "person.text.rectangle")
+                }
+                .tag(AppTab.summary)
+
             HistoryListView()
                 .tabItem {
                     Label("History", systemImage: "clock")
@@ -61,6 +67,7 @@ enum SafetyDisclaimer {
 private enum AppTab {
     case scan
     case allergens
+    case summary
     case history
 }
 
