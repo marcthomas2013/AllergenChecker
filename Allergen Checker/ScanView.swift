@@ -4,6 +4,9 @@ import SwiftUI
 import UIKit
 
 struct ScanView: View {
+    @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
+
+    @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
     @Query(sort: \Allergen.name) private var allergens: [Allergen]
 
     @State private var selectedPhoto: PhotosPickerItem?
@@ -15,13 +18,25 @@ struct ScanView: View {
 
     private let ocrService = OCRService()
 
+    private var selectedProfile: AllergyProfileOption {
+        AllergyProfileSelection.selectedOption(storedID: selectedProfileID, profiles: profiles)
+    }
+
+    private var selectedProfileUUID: UUID? {
+        selectedProfile.profileID
+    }
+
+    private var profileAllergens: [Allergen] {
+        allergens.filter { $0.profileID == selectedProfileUUID }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
-                if allergens.isEmpty {
+                if profileAllergens.isEmpty {
                     noAllergensView
                 } else if let scanResult {
-                    ScanResultView(result: scanResult)
+                    ScanResultView(result: scanResult, profileID: selectedProfileUUID)
                 } else {
                     scanPrompt
                 }
@@ -36,6 +51,11 @@ struct ScanView: View {
                             errorMessage = nil
                         }
                     }
+                }
+
+                ToolbarItem(placement: .principal) {
+                    AllergyProfilePicker(profiles: profiles, selectedProfileID: $selectedProfileID)
+                        .disabled(scanResult != nil)
                 }
             }
             .overlay {
@@ -65,7 +85,7 @@ struct ScanView: View {
             }
             .sheet(isPresented: $isAddingAllergen) {
                 NavigationStack {
-                    AllergenEditorView()
+                    AllergenEditorView(profileID: selectedProfileUUID)
                 }
             }
             .onChange(of: selectedPhoto) { _, newValue in
@@ -85,7 +105,7 @@ struct ScanView: View {
             ContentUnavailableView(
                 "Add Allergens First",
                 systemImage: "list.bullet.clipboard",
-                description: Text("Save the ingredients you need to avoid before scanning a label.")
+                description: Text("Save the ingredients \(selectedProfile.name) needs to avoid before scanning a label.")
             )
 
             Button {
@@ -109,7 +129,7 @@ struct ScanView: View {
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text("Choose a clear photo or take one now. The app will extract text on device and compare it with your saved allergens.")
+                Text("Choose a clear photo or take one now. The app will extract text on device and compare it with \(selectedProfile.name)'s saved allergens.")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -154,7 +174,7 @@ struct ScanView: View {
     }
 
     private var searchSummaryText: String {
-        allergens
+        profileAllergens
             .map { allergen in
                 if allergen.aliases.isEmpty {
                     return allergen.name
@@ -185,7 +205,7 @@ struct ScanView: View {
         Task {
             do {
                 let textBlocks = try await ocrService.recognizeText(in: image)
-                let matches = AllergenMatcher.matches(in: textBlocks, allergens: allergens)
+                let matches = AllergenMatcher.matches(in: textBlocks, allergens: profileAllergens)
 
                 scanResult = ScanResult(
                     image: image,
@@ -209,5 +229,5 @@ struct ScanResult {
 
 #Preview {
     ScanView()
-        .modelContainer(for: Allergen.self, inMemory: true)
+        .modelContainer(for: [AllergyProfile.self, Allergen.self, ScanHistoryEntry.self], inMemory: true)
 }

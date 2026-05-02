@@ -5,6 +5,7 @@ import UIKit
 
 @Model
 final class ScanHistoryEntry {
+    var profileID: UUID? = nil
     var createdAt: Date
     var imageData: Data
     var textBlocksData: Data
@@ -12,7 +13,8 @@ final class ScanHistoryEntry {
     var matchCount: Int
     var recognizedTextPreview: String
 
-    init(result: ScanResult, createdAt: Date = Date()) throws {
+    init(result: ScanResult, profileID: UUID? = nil, createdAt: Date = Date()) throws {
+        self.profileID = profileID
         self.createdAt = createdAt
         self.imageData = result.image.jpegData(compressionQuality: 0.9) ?? Data()
         self.textBlocksData = try JSONEncoder().encode(result.textBlocks.map(ScanTextBlockSnapshot.init))

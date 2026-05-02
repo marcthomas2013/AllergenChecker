@@ -4,20 +4,35 @@ import UIKit
 
 struct HistoryListView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
+
+    @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
     @Query(sort: \ScanHistoryEntry.createdAt, order: .reverse) private var entries: [ScanHistoryEntry]
+
+    private var selectedProfile: AllergyProfileOption {
+        AllergyProfileSelection.selectedOption(storedID: selectedProfileID, profiles: profiles)
+    }
+
+    private var selectedProfileUUID: UUID? {
+        selectedProfile.profileID
+    }
+
+    private var filteredEntries: [ScanHistoryEntry] {
+        entries.filter { $0.profileID == selectedProfileUUID }
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if entries.isEmpty {
+                if filteredEntries.isEmpty {
                     ContentUnavailableView(
                         "No Saved Scans",
                         systemImage: "clock",
-                        description: Text("Saved scan results will appear here so you can review them later.")
+                        description: Text("Saved scan results for \(selectedProfile.name) will appear here so you can review them later.")
                     )
                 } else {
                     List {
-                        ForEach(entries) { entry in
+                        ForEach(filteredEntries) { entry in
                             NavigationLink {
                                 HistoryDetailView(entry: entry)
                             } label: {
@@ -30,7 +45,11 @@ struct HistoryListView: View {
             }
             .navigationTitle("History")
             .toolbar {
-                if !entries.isEmpty {
+                ToolbarItem(placement: .principal) {
+                    AllergyProfilePicker(profiles: profiles, selectedProfileID: $selectedProfileID)
+                }
+
+                if !filteredEntries.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
                         EditButton()
                     }
@@ -42,7 +61,7 @@ struct HistoryListView: View {
     private func deleteEntries(at offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(entries[index])
+                modelContext.delete(filteredEntries[index])
             }
         }
     }
@@ -107,6 +126,10 @@ private struct HistoryDetailView: View {
     @State private var rescanError: String?
     @State private var didRescan = false
 
+    private var profileAllergens: [Allergen] {
+        allergens.filter { $0.profileID == entry.profileID }
+    }
+
     var body: some View {
         Group {
             if let result = try? entry.scanResult() {
@@ -128,12 +151,12 @@ private struct HistoryDetailView: View {
                 } label: {
                     Label("Rescan", systemImage: "arrow.triangle.2.circlepath")
                 }
-                .disabled(allergens.isEmpty)
+                .disabled(profileAllergens.isEmpty)
             }
         }
         .safeAreaInset(edge: .bottom) {
             if didRescan {
-                Label("History updated using your current allergens.", systemImage: "checkmark.circle.fill")
+                Label("History updated using this person's current allergens.", systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
                     .padding(10)
@@ -153,7 +176,7 @@ private struct HistoryDetailView: View {
 
     private func rescan() {
         do {
-            try entry.rescan(using: allergens)
+            try entry.rescan(using: profileAllergens)
             try modelContext.save()
 
             withAnimation {
@@ -174,5 +197,5 @@ private struct HistoryDetailView: View {
 
 #Preview {
     HistoryListView()
-        .modelContainer(for: [Allergen.self, ScanHistoryEntry.self], inMemory: true)
+        .modelContainer(for: [AllergyProfile.self, Allergen.self, ScanHistoryEntry.self], inMemory: true)
 }

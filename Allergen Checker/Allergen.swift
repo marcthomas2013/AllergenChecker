@@ -3,6 +3,7 @@ import SwiftData
 
 @Model
 final class Allergen {
+    var profileID: UUID? = nil
     var name: String
     var aliases: [String]
     var notes: String
@@ -10,12 +11,14 @@ final class Allergen {
     var updatedAt: Date
 
     init(
+        profileID: UUID? = nil,
         name: String,
         aliases: [String] = [],
         notes: String = "",
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
+        self.profileID = profileID
         self.name = name
         self.aliases = aliases
         self.notes = notes

@@ -73,5 +73,5 @@ private enum AppTab {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Allergen.self, ScanHistoryEntry.self], inMemory: true)
+        .modelContainer(for: [AllergyProfile.self, Allergen.self, ScanHistoryEntry.self], inMemory: true)
 }

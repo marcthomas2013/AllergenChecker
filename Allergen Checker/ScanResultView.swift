@@ -6,6 +6,7 @@ struct ScanResultView: View {
     @Environment(\.modelContext) private var modelContext
 
     let result: ScanResult
+    var profileID: UUID? = nil
     var allowsSaving = true
 
     private let explanationService = LocalMatchExplanationService()
@@ -108,7 +109,7 @@ struct ScanResultView: View {
 
     private func saveScan() {
         do {
-            let entry = try ScanHistoryEntry(result: result)
+            let entry = try ScanHistoryEntry(result: result, profileID: profileID)
             modelContext.insert(entry)
             try modelContext.save()
             isSaved = true

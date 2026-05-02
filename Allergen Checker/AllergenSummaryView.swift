@@ -2,17 +2,40 @@ import SwiftData
 import SwiftUI
 
 struct AllergenSummaryView: View {
+    @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
+
+    @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
     @Query(sort: \Allergen.name) private var allergens: [Allergen]
     @State private var selectedLanguage: AllergenDisplayLanguage = .english
+
+    private var selectedProfile: AllergyProfileOption {
+        AllergyProfileSelection.selectedOption(storedID: selectedProfileID, profiles: profiles)
+    }
+
+    private var selectedProfileUUID: UUID? {
+        selectedProfile.profileID
+    }
+
+    private var profileAllergens: [Allergen] {
+        allergens.filter { $0.profileID == selectedProfileUUID }
+    }
+
+    private var pageTitle: String {
+        if selectedProfile.profileID != nil {
+            return selectedLanguage.allergiesTitle(for: selectedProfile.name)
+        }
+
+        return selectedLanguage.pageTitle
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if allergens.isEmpty {
+                if profileAllergens.isEmpty {
                     ContentUnavailableView(
                         "No Allergens Configured",
                         systemImage: "person.text.rectangle",
-                        description: Text("Add allergens in the Allergens tab to show them here.")
+                        description: Text("Add allergens for \(selectedProfile.name) in the Allergens tab to show them here.")
                     )
                 } else {
                     ScrollView {
@@ -24,8 +47,12 @@ struct AllergenSummaryView: View {
                     }
                 }
             }
-            .navigationTitle(selectedLanguage.pageTitle)
+            .navigationTitle(pageTitle)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    AllergyProfilePicker(profiles: profiles, selectedProfileID: $selectedProfileID)
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         ForEach(AllergenDisplayLanguage.allCases) { language in
@@ -68,7 +95,7 @@ struct AllergenSummaryView: View {
             Text("Language: \(selectedLanguage.name)")
                 .font(.headline)
 
-            ForEach(allergens) { allergen in
+            ForEach(profileAllergens) { allergen in
                 let translatedName = AllergenTranslationCatalog.translation(
                     for: allergen.name,
                     language: selectedLanguage
@@ -184,6 +211,27 @@ enum AllergenDisplayLanguage: String, CaseIterable, Identifiable {
         }
     }
 
+    func allergiesTitle(for name: String) -> String {
+        switch self {
+        case .english:
+            "\(name)'s Allergies"
+        case .french:
+            "Allergies de \(name)"
+        case .spanish:
+            "Alergias de \(name)"
+        case .german:
+            "\(name)s Allergien"
+        case .italian:
+            "Allergie di \(name)"
+        case .portuguese:
+            "Alergias de \(name)"
+        case .dutch:
+            "Allergieën van \(name)"
+        case .polish:
+            "Alergie: \(name)"
+        }
+    }
+
     var aliasesLabel: String {
         switch self {
         case .english:
@@ -277,5 +325,5 @@ enum AllergenTranslationCatalog {
 
 #Preview {
     AllergenSummaryView()
-        .modelContainer(for: Allergen.self, inMemory: true)
+        .modelContainer(for: [AllergyProfile.self, Allergen.self], inMemory: true)
 }

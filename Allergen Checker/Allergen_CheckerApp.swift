@@ -12,6 +12,7 @@ import SwiftData
 struct Allergen_CheckerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
+            AllergyProfile.self,
             Allergen.self,
             ScanHistoryEntry.self,
         ])

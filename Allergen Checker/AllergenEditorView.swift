@@ -6,13 +6,15 @@ struct AllergenEditorView: View {
     @Environment(\.modelContext) private var modelContext
 
     private let allergen: Allergen?
+    private let profileID: UUID?
 
     @State private var name: String
     @State private var aliasesText: String
     @State private var notes: String
 
-    init(allergen: Allergen? = nil) {
+    init(allergen: Allergen? = nil, profileID: UUID? = nil) {
         self.allergen = allergen
+        self.profileID = allergen?.profileID ?? profileID
         _name = State(initialValue: allergen?.name ?? "")
         _aliasesText = State(initialValue: allergen?.aliases.joined(separator: ", ") ?? "")
         _notes = State(initialValue: allergen?.notes ?? "")
@@ -82,6 +84,7 @@ struct AllergenEditorView: View {
         } else {
             modelContext.insert(
                 Allergen(
+                    profileID: profileID,
                     name: trimmedName,
                     aliases: aliases,
                     notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
