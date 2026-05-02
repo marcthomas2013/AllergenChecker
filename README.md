@@ -1,20 +1,27 @@
 # Allergen Checker
 
-Allergen Checker is an iOS app for keeping a personal list of ingredients you are allergic to and scanning ingredient labels for possible matches.
+Allergen Checker helps you quickly check ingredient labels against the allergens, ingredients, and additives you need to avoid.
 
-The app stores your allergens on device, uses Apple Vision to extract text from ingredient label photos, and highlights any matched allergen text on the scanned image.
+Add your personal allergy profile, save allergens and aliases, then scan a product label using your camera or a photo from your library. The app reads the ingredient text on device and highlights any possible matches so you can review them more easily.
+
+Built for everyday shopping, travel, and label checking, Allergen Checker keeps your saved allergens, scan history, and allergy lists close at hand.
 
 ## Features
 
-- Maintain a personal allergen list.
-- Add, edit, delete, and search allergens.
-- Quickly add common food allergens from a built-in practical catalog.
-- Store aliases or related ingredient names for each allergen.
-- Scan ingredient labels from the camera or photo library.
-- Run on-device OCR using Apple Vision.
-- Match recognized ingredient text against saved allergen names and aliases.
-- Show possible allergen warnings with recognized text snippets and OCR confidence.
-- Highlight matched text areas on the scanned image.
+- Scan ingredient labels using the camera or photo library.
+- Use on-device text recognition for ingredient labels.
+- Highlight possible allergen matches on the scanned image.
+- Save allergens, related ingredients, aliases, and notes.
+- Quick add common UK/EU major allergens.
+- Quick add E-number ingredients and additives.
+- Create and manage allergy profiles for different people.
+- Save scan results to history for later review.
+- Rescan saved history using the person's current allergens.
+- View a clear "My Allergies" summary.
+- Translate allergy lists into supported languages for travel.
+- Show built-in safety reminders to always confirm ingredients yourself.
+
+Allergen Checker is designed as a helpful aid, not a medical guarantee. Always check product packaging, ingredient information, and allergen advice carefully before deciding whether a product is safe for you.
 
 ## How It Works
 
