@@ -23,10 +23,10 @@ struct AllergyProfileOption: Identifiable, Hashable {
 
     var allergiesTitle: String {
         if profileID == nil {
-            return "My Allergies"
+            return String(localized: "My Allergies")
         }
 
-        return "\(name)'s Allergies"
+        return String(format: String(localized: "%@'s Allergies"), name)
     }
 }
 
@@ -36,7 +36,7 @@ enum AllergyProfileSelection {
             AllergyProfileOption(
                 id: AllergyProfileOption.defaultID,
                 profileID: nil,
-                name: "Me"
+                name: String(localized: "Me")
             )
         ] + profiles.map { profile in
             AllergyProfileOption(

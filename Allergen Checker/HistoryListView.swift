@@ -94,7 +94,11 @@ private struct HistoryRow: View {
     }
 
     private var matchSummary: String {
-        entry.matchCount == 1 ? "1 possible match" : "\(entry.matchCount) possible matches"
+        if entry.matchCount == 1 {
+            return String(localized: "1 possible match")
+        }
+
+        return String(format: String(localized: "%d possible matches"), entry.matchCount)
     }
 
     @ViewBuilder

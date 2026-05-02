@@ -1,0 +1,4 @@
+/* Localized app metadata and permission prompts. */
+"CFBundleDisplayName" = "Allergen Checker";
+"NSCameraUsageDescription" = "O Allergen Checker usa a câmara para digitalizar rótulos de ingredientes à procura dos alergénios que guardou.";
+"NSPhotoLibraryUsageDescription" = "O Allergen Checker pode digitalizar fotografias de rótulos de ingredientes que escolher na sua biblioteca de fotografias.";

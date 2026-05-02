@@ -108,7 +108,7 @@ struct AllergenListView: View {
 
                 Section {
                     if filteredQuickAddCommonAllergens.isEmpty {
-                        Text(quickAddCommonAllergens.isEmpty ? "All common allergens have been added." : "No common allergens match this search.")
+                        Text(quickAddCommonAllergens.isEmpty ? String(localized: "All common allergens have been added.") : String(localized: "No common allergens match this search."))
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(filteredQuickAddCommonAllergens) { allergen in
@@ -125,7 +125,7 @@ struct AllergenListView: View {
 
                 Section {
                     if filteredQuickAddENumberIngredients.isEmpty {
-                        Text(quickAddENumberIngredients.isEmpty ? "All E-number ingredients have been added." : "No E-number ingredients match this search.")
+                        Text(quickAddENumberIngredients.isEmpty ? String(localized: "All E-number ingredients have been added.") : String(localized: "No E-number ingredients match this search."))
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(filteredQuickAddENumberIngredients) { allergen in
@@ -144,8 +144,10 @@ struct AllergenListView: View {
             .searchable(text: $searchText, prompt: "Search allergens")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if !profileAllergens.isEmpty {
-                        EditButton()
+                    Button {
+                        isManagingPeople = true
+                    } label: {
+                        Label("Manage People", systemImage: "person.2")
                     }
                 }
 
@@ -154,20 +156,10 @@ struct AllergenListView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            isAddingAllergen = true
-                        } label: {
-                            Label("Add Allergen", systemImage: "plus")
-                        }
-
-                        Button {
-                            isManagingPeople = true
-                        } label: {
-                            Label("Manage People", systemImage: "person.2")
-                        }
+                    Button {
+                        isAddingAllergen = true
                     } label: {
-                        Label("Allergen Actions", systemImage: "ellipsis.circle")
+                        Label("Add Allergen", systemImage: "plus")
                     }
                 }
             }
@@ -252,7 +244,7 @@ private struct QuickAddAllergenRow: View {
                     .font(.title3)
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("Add \(allergen.name)")
+            .accessibilityLabel(Text("Add \(allergen.name)"))
         }
         .padding(.vertical, 4)
     }

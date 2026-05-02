@@ -9,9 +9,18 @@ struct LocalMatchExplanationService: MatchExplaining {
         let confidence = Int((match.confidence * 100).rounded())
 
         if match.matchedTerm.localizedCaseInsensitiveCompare(match.allergenName) == .orderedSame {
-            return "Vision found \"\(match.matchedTerm)\" in the ingredient text with \(confidence)% confidence."
+            return String(
+                format: String(localized: "Vision found \"%@\" in the ingredient text with %d%% confidence."),
+                match.matchedTerm,
+                confidence
+            )
         }
 
-        return "Vision found \"\(match.matchedTerm)\", which you saved as an alias for \(match.allergenName), with \(confidence)% confidence."
+        return String(
+            format: String(localized: "Vision found \"%@\", which you saved as an alias for %@, with %d%% confidence."),
+            match.matchedTerm,
+            match.allergenName,
+            confidence
+        )
     }
 }

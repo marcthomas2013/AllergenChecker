@@ -1,0 +1,4 @@
+/* Localized app metadata and permission prompts. */
+"CFBundleDisplayName" = "Allergen Checker";
+"NSCameraUsageDescription" = "Allergen Checker usa la cámara para escanear etiquetas de ingredientes en busca de los alérgenos que has guardado.";
+"NSPhotoLibraryUsageDescription" = "Allergen Checker puede escanear fotos de etiquetas de ingredientes que elijas de tu fototeca.";

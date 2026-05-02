@@ -54,7 +54,7 @@ struct ScanResultView: View {
     private var statusCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(
-                hasMatches ? "Possible allergen found" : "No saved allergens found",
+                hasMatches ? String(localized: "Possible allergen found") : String(localized: "No saved allergens found"),
                 systemImage: hasMatches ? "exclamationmark.triangle.fill" : "checkmark.shield.fill"
             )
             .font(.title3)
@@ -62,15 +62,15 @@ struct ScanResultView: View {
             .foregroundStyle(hasMatches ? .red : .green)
 
             Text(hasMatches
-                 ? "Review the highlighted label areas before deciding whether the product is safe for you."
-                 : "No text matched your saved allergen names or aliases.")
+                 ? String(localized: "Review the highlighted label areas before deciding whether the product is safe for you.")
+                 : String(localized: "No text matched your saved allergen names or aliases."))
                 .foregroundStyle(.secondary)
 
             if allowsSaving {
                 Button {
                     saveScan()
                 } label: {
-                    Label(isSaved ? "Saved to History" : "Save Scan to History", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                    Label(isSaved ? String(localized: "Saved to History") : String(localized: "Save Scan to History"), systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -259,7 +259,7 @@ private struct HighlightedImageView: View {
                         .background(Color.red.opacity(0.18))
                         .frame(width: highlightRect.width, height: highlightRect.height)
                         .position(x: highlightRect.midX, y: highlightRect.midY)
-                        .accessibilityLabel("Highlighted match for \(match.allergenName)")
+                        .accessibilityLabel(Text("Highlighted match for \(match.allergenName)"))
                 }
             }
         }

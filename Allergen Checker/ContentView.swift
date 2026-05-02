@@ -60,8 +60,8 @@ struct ContentView: View {
 }
 
 enum SafetyDisclaimer {
-    static let title = "Important Safety Notice"
-    static let message = "Allergen Checker is an aid and is not a guarantee that results are 100% accurate. You must always confirm ingredients and allergen information yourself. The developer accepts no responsibility for any mistakes."
+    static let title = String(localized: "Important Safety Notice")
+    static let message = String(localized: "Allergen Checker is an aid and is not a guarantee that results are 100% accurate. You must always confirm ingredients and allergen information yourself. The developer accepts no responsibility for any mistakes.")
 }
 
 private enum AppTab {
