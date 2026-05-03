@@ -14,7 +14,7 @@ Allergen Checker may store the following information on your device:
 
 - Allergy profiles you create, such as names for different people.
 - Allergens, related ingredients, aliases, and notes that you save.
-- Scan history, including saved scan images, recognized text, possible matches, and scan dates.
+- Scan history, including saved scan images, recognised text, possible matches, and scan dates.
 - App preferences, such as the selected allergy profile and whether you have acknowledged the safety notice.
 
 This information is stored locally on your device using Apple-provided storage.
@@ -29,15 +29,15 @@ Photos are used only for the label scanning features you choose to use.
 
 ## Text Recognition and Matching
 
-Allergen Checker uses on-device text recognition to read ingredient label photos. Recognized text is compared with the allergens, aliases, and related ingredients you have saved.
+Allergen Checker uses on-device text recognition to read ingredient label photos. Recognised text is compared with the allergens, aliases, and related ingredients you have saved.
 
-The app does not send label photos, recognized text, allergy profiles, allergens, notes, or scan history to a developer-operated server.
+The app does not send label photos, recognised text, allergy profiles, allergens, notes, or scan history to a developer-operated server.
 
 ## Data Sharing
 
 Allergen Checker does not sell your data.
 
-Allergen Checker does not share your allergy information, scan images, recognized text, or scan history with third parties.
+Allergen Checker does not share your allergy information, scan images, recognised text, or scan history with third parties.
 
 The app does not currently use developer-operated analytics, advertising tracking, or cloud OCR services.
 
@@ -69,4 +69,4 @@ This privacy policy may be updated from time to time. Any changes will be posted
 
 If you have questions about this privacy policy, contact:
 
-marc@thethomashouse.co.uk
+allergycheckerapp@gmail.com

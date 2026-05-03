@@ -1,0 +1,9 @@
+title: Allergen Checker
+description: Scan ingredient labels, highlight possible allergen matches, and keep allergy lists ready for shopping and travel.
+theme: minima
+
+header_pages:
+  - index.md
+  - privacy-policy.md
+
+markdown: kramdown
