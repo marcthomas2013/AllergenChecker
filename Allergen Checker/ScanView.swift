@@ -4,6 +4,7 @@ import SwiftUI
 import UIKit
 
 struct ScanView: View {
+    @EnvironmentObject private var adsService: AdsService
     @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
 
     @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
@@ -212,6 +213,7 @@ struct ScanView: View {
                     textBlocks: textBlocks,
                     matches: matches
                 )
+                adsService.registerCompletedScanAndPresentInterstitialIfNeeded()
             } catch {
                 errorMessage = error.localizedDescription
             }

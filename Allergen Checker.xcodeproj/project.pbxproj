@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E14B9E5A40C1141200A1B001 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = E14B9E5940C1141200A1B001 /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D7388A622F9D2792008B5AB1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E14B9E5A40C1141200A1B001 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = "Allergen Checker";
 			packageProductDependencies = (
+				E14B9E5940C1141200A1B001 /* GoogleMobileAds */,
 			);
 			productName = "Allergen Checker";
 			productReference = D7388A502F9D2791008B5AB1 /* Allergen Checker.app */;
@@ -219,6 +225,9 @@
 			productRefGroup = D7388A512F9D2791008B5AB1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
+			packageReferences = (
+				E14B9E5840C1141200A1B001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			targets = (
 				D7388A4F2F9D2791008B5AB1 /* Allergen Checker */,
 				D7388A602F9D2792008B5AB1 /* Allergen CheckerTests */,
@@ -288,6 +297,17 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E14B9E5840C1141200A1B001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCBuildConfiguration section */
 		D7388A752F9D2792008B5AB1 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -301,6 +321,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Allergen Checker/Info.plist";
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-3940256099942544~1458002511";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Allergen Checker uses the camera to scan ingredient labels for allergens you have saved.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allergen Checker can scan ingredient label photos you choose from your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -338,6 +359,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Allergen Checker/Info.plist";
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-3940256099942544~1458002511";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Allergen Checker uses the camera to scan ingredient labels for allergens you have saved.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allergen Checker can scan ingredient label photos you choose from your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -608,6 +630,14 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E14B9E5940C1141200A1B001 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E14B9E5840C1141200A1B001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D7388A482F9D2791008B5AB1 /* Project object */;
 }

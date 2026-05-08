@@ -11,6 +11,8 @@ import SwiftData
 @main
 struct Allergen_CheckerApp: App {
     @StateObject private var cloudSyncMonitor = CloudSyncMonitor()
+    @StateObject private var subscriptionManager = SubscriptionManager()
+    @StateObject private var adsService = AdsService()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -35,6 +37,13 @@ struct Allergen_CheckerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(cloudSyncMonitor)
+                .environmentObject(subscriptionManager)
+                .environmentObject(adsService)
+                .task {
+                    adsService.configureOnLaunch()
+                    await subscriptionManager.initialize()
+                    adsService.setAdsEnabled(!subscriptionManager.hasActiveSubscription)
+                }
         }
         .modelContainer(sharedModelContainer)
     }

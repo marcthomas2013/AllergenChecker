@@ -1,4 +1,5 @@
 import SwiftData
+import StoreKit
 import SwiftUI
 
 struct AllergyProfilePicker: View {
@@ -20,6 +21,7 @@ struct AllergyProfilePicker: View {
 struct ProfileManagementView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
     @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
@@ -45,6 +47,50 @@ struct ProfileManagementView: View {
                         Label("Add Person", systemImage: "plus")
                     }
                     .disabled(trimmedNewPersonName.isEmpty)
+                }
+
+                Section {
+                    subscriptionStatusView
+
+                    if subscriptionManager.isLoadingProducts {
+                        ProgressView("Loading subscription options...")
+                    } else if subscriptionManager.products.isEmpty {
+                        Text("Subscription plans are not available right now.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(subscriptionManager.products, id: \.id) { product in
+                            Button {
+                                Task {
+                                    await subscriptionManager.purchase(product)
+                                }
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(product.displayName)
+                                        Text(product.description)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(2)
+                                    }
+
+                                    Spacer()
+                                    Text(product.displayPrice)
+                                }
+                            }
+                            .disabled(subscriptionManager.isPurchasing)
+                        }
+                    }
+
+                    Button("Restore Purchases") {
+                        Task {
+                            await subscriptionManager.restorePurchases()
+                        }
+                    }
+                    .disabled(subscriptionManager.isPurchasing)
+                } header: {
+                    Text("Remove Ads Subscription")
+                } footer: {
+                    Text("When this subscription is active, banner and interstitial ads are removed. If the subscription ends or is cancelled, ads will return automatically.")
                 }
 
                 Section {
@@ -74,6 +120,25 @@ struct ProfileManagementView: View {
                     }
                 }
             }
+            .alert("Purchase Error", isPresented: Binding(
+                get: { subscriptionManager.purchaseErrorMessage != nil },
+                set: { if !$0 { subscriptionManager.purchaseErrorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(subscriptionManager.purchaseErrorMessage ?? "Could not complete purchase.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var subscriptionStatusView: some View {
+        if subscriptionManager.hasActiveSubscription {
+            Label("Active: ads are currently removed", systemImage: "checkmark.seal.fill")
+                .foregroundStyle(.green)
+        } else {
+            Label("No active subscription: ads are shown", systemImage: "megaphone")
+                .foregroundStyle(.secondary)
         }
     }
 

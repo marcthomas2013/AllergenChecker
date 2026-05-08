@@ -5,6 +5,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var cloudSyncMonitor: CloudSyncMonitor
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
+    @EnvironmentObject private var adsService: AdsService
 
     @Query private var allergens: [Allergen]
     @AppStorage("lastAcknowledgedSafetyDisclaimerVersion") private var lastAcknowledgedSafetyDisclaimerVersion = ""
@@ -47,6 +49,10 @@ struct ContentView: View {
         .safeAreaInset(edge: .top) {
             CloudSyncIndicator(phase: cloudSyncMonitor.phase)
         }
+        .safeAreaInset(edge: .bottom) {
+            AdsBannerContainer()
+                .environmentObject(adsService)
+        }
         .onAppear {
             if allergens.isEmpty {
                 selectedTab = .scan
@@ -55,16 +61,22 @@ struct ContentView: View {
             if lastAcknowledgedSafetyDisclaimerVersion != currentAppVersion {
                 isShowingSafetyDisclaimer = true
             }
+
+            adsService.setAdsEnabled(!subscriptionManager.hasActiveSubscription)
         }
         .task {
             cloudSyncMonitor.startMonitoringCloudKitEvents()
             await requestCloudSync(reason: .appOpened)
+        }
+        .onChange(of: subscriptionManager.hasActiveSubscription) { _, isSubscribed in
+            adsService.setAdsEnabled(!isSubscribed)
         }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
                 Task {
                     await requestCloudSync(reason: .appOpened)
+                    await subscriptionManager.refreshSubscriptionStatus()
                 }
             case .inactive, .background:
                 Task {
