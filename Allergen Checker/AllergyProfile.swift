@@ -3,9 +3,9 @@ import SwiftData
 
 @Model
 final class AllergyProfile {
-    var id: UUID
-    var name: String
-    var createdAt: Date
+    var id: UUID = UUID()
+    var name: String = ""
+    var createdAt: Date = Date()
 
     init(id: UUID = UUID(), name: String, createdAt: Date = Date()) {
         self.id = id

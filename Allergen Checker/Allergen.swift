@@ -4,11 +4,11 @@ import SwiftData
 @Model
 final class Allergen {
     var profileID: UUID? = nil
-    var name: String
-    var aliases: [String]
-    var notes: String
-    var createdAt: Date
-    var updatedAt: Date
+    var name: String = ""
+    var aliases: [String] = []
+    var notes: String = ""
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         profileID: UUID? = nil,

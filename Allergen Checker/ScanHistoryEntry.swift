@@ -6,12 +6,12 @@ import UIKit
 @Model
 final class ScanHistoryEntry {
     var profileID: UUID? = nil
-    var createdAt: Date
-    var imageData: Data
-    var textBlocksData: Data
-    var matchesData: Data
-    var matchCount: Int
-    var recognizedTextPreview: String
+    var createdAt: Date = Date()
+    @Attribute(.externalStorage) var imageData: Data = Data()
+    var textBlocksData: Data = Data()
+    var matchesData: Data = Data()
+    var matchCount: Int = 0
+    var recognizedTextPreview: String = ""
 
     init(result: ScanResult, profileID: UUID? = nil, createdAt: Date = Date()) throws {
         self.profileID = profileID

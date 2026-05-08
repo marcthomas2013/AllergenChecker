@@ -2,6 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var cloudSyncMonitor: CloudSyncMonitor
+
     @Query private var allergens: [Allergen]
     @AppStorage("lastAcknowledgedSafetyDisclaimerVersion") private var lastAcknowledgedSafetyDisclaimerVersion = ""
     @State private var selectedTab: AppTab = .scan
@@ -40,6 +44,9 @@ struct ContentView: View {
                 }
                 .tag(AppTab.history)
         }
+        .safeAreaInset(edge: .top) {
+            CloudSyncIndicator(phase: cloudSyncMonitor.phase)
+        }
         .onAppear {
             if allergens.isEmpty {
                 selectedTab = .scan
@@ -47,6 +54,24 @@ struct ContentView: View {
 
             if lastAcknowledgedSafetyDisclaimerVersion != currentAppVersion {
                 isShowingSafetyDisclaimer = true
+            }
+        }
+        .task {
+            cloudSyncMonitor.startMonitoringCloudKitEvents()
+            await requestCloudSync(reason: .appOpened)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active:
+                Task {
+                    await requestCloudSync(reason: .appOpened)
+                }
+            case .inactive, .background:
+                Task {
+                    await requestCloudSync(reason: .appClosing)
+                }
+            @unknown default:
+                break
             }
         }
         .alert(SafetyDisclaimer.title, isPresented: $isShowingSafetyDisclaimer) {
@@ -57,6 +82,89 @@ struct ContentView: View {
             Text(SafetyDisclaimer.message)
         }
     }
+
+    private func requestCloudSync(reason: CloudSyncReason) async {
+        await cloudSyncMonitor.synchronize(context: modelContext, reason: reason)
+    }
+}
+
+private struct CloudSyncIndicator: View {
+    let phase: CloudSyncPhase
+
+    var body: some View {
+        if let status = indicatorStatus {
+            HStack(spacing: 8) {
+                if status.showsProgress {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: status.systemImage)
+                        .foregroundStyle(status.tint)
+                }
+
+                Text(status.message)
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.regularMaterial, in: Capsule())
+            .padding(.top, 6)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Text(status.message))
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private var indicatorStatus: CloudSyncIndicatorStatus? {
+        switch phase {
+        case .idle:
+            return nil
+        case .checking:
+            return CloudSyncIndicatorStatus(
+                message: String(localized: "Checking iCloud..."),
+                systemImage: "icloud",
+                tint: .secondary,
+                showsProgress: true
+            )
+        case .syncing(let message):
+            return CloudSyncIndicatorStatus(
+                message: message,
+                systemImage: "icloud.and.arrow.up",
+                tint: .blue,
+                showsProgress: true
+            )
+        case .synced:
+            return CloudSyncIndicatorStatus(
+                message: String(localized: "iCloud sync complete"),
+                systemImage: "checkmark.icloud.fill",
+                tint: .green,
+                showsProgress: false
+            )
+        case .unavailable(let message):
+            return CloudSyncIndicatorStatus(
+                message: message,
+                systemImage: "icloud.slash",
+                tint: .orange,
+                showsProgress: false
+            )
+        case .failed(let message):
+            return CloudSyncIndicatorStatus(
+                message: String(format: String(localized: "iCloud sync failed: %@"), message),
+                systemImage: "exclamationmark.icloud",
+                tint: .red,
+                showsProgress: false
+            )
+        }
+    }
+}
+
+private struct CloudSyncIndicatorStatus {
+    let message: String
+    let systemImage: String
+    let tint: Color
+    let showsProgress: Bool
 }
 
 enum SafetyDisclaimer {
@@ -74,4 +182,5 @@ private enum AppTab {
 #Preview {
     ContentView()
         .modelContainer(for: [AllergyProfile.self, Allergen.self, ScanHistoryEntry.self], inMemory: true)
+        .environmentObject(CloudSyncMonitor())
 }
