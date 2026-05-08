@@ -106,6 +106,27 @@ struct AdsBannerContainer: View {
     }
 }
 
+struct AdInsetContent<Content: View>: View {
+    @EnvironmentObject private var adsService: AdsService
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if adsService.showsAds {
+                    AdsBannerContainer()
+                        .environmentObject(adsService)
+                        .frame(maxWidth: .infinity)
+                        .background(.bar)
+                }
+            }
+    }
+}
+
 #if canImport(GoogleMobileAds)
 private struct BannerAdView: UIViewRepresentable {
     let adUnitID: String

@@ -22,36 +22,48 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            ScanView()
+            AdInsetContent {
+                ScanView()
+            }
                 .tabItem {
                     Label("Scan", systemImage: "camera.viewfinder")
                 }
                 .tag(AppTab.scan)
 
-            AllergenListView()
+            AdInsetContent {
+                AllergenListView()
+            }
                 .tabItem {
                     Label("Allergens", systemImage: "list.bullet.clipboard")
                 }
                 .tag(AppTab.allergens)
 
-            AllergenSummaryView()
+            AdInsetContent {
+                AllergenSummaryView()
+            }
                 .tabItem {
                     Label("My Allergies", systemImage: "person.text.rectangle")
                 }
                 .tag(AppTab.summary)
 
-            HistoryListView()
+            AdInsetContent {
+                HistoryListView()
+            }
                 .tabItem {
                     Label("History", systemImage: "clock")
                 }
                 .tag(AppTab.history)
+
+            AdInsetContent {
+                SettingsView()
+            }
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(AppTab.settings)
         }
         .safeAreaInset(edge: .top) {
             CloudSyncIndicator(phase: cloudSyncMonitor.phase)
-        }
-        .safeAreaInset(edge: .bottom) {
-            AdsBannerContainer()
-                .environmentObject(adsService)
         }
         .onAppear {
             if allergens.isEmpty {
@@ -189,10 +201,13 @@ private enum AppTab {
     case allergens
     case summary
     case history
+    case settings
 }
 
 #Preview {
     ContentView()
         .modelContainer(for: [AllergyProfile.self, Allergen.self, ScanHistoryEntry.self], inMemory: true)
         .environmentObject(CloudSyncMonitor())
+        .environmentObject(SubscriptionManager())
+        .environmentObject(AdsService())
 }
