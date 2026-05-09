@@ -3,6 +3,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var subscriptionManager: SubscriptionManager
+    @AppStorage(ScanFeedbackSoundCatalog.positiveStorageKey) private var positiveSoundOptionID = ScanFeedbackSoundCatalog.defaultPositiveOptionID
+    @AppStorage(ScanFeedbackSoundCatalog.negativeStorageKey) private var negativeSoundOptionID = ScanFeedbackSoundCatalog.defaultNegativeOptionID
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
@@ -65,6 +67,24 @@ struct SettingsView: View {
                 } header: {
                     Text("App")
                 }
+
+                Section {
+                    Picker("Positive Sound", selection: $positiveSoundOptionID) {
+                        ForEach(ScanFeedbackSoundCatalog.positiveOptions) { option in
+                            Text(option.name).tag(option.id)
+                        }
+                    }
+
+                    Picker("Negative Sound", selection: $negativeSoundOptionID) {
+                        ForEach(ScanFeedbackSoundCatalog.negativeOptions) { option in
+                            Text(option.name).tag(option.id)
+                        }
+                    }
+                } header: {
+                    Text("Scan Feedback")
+                } footer: {
+                    Text("Choose which sounds play when a scan finds no allergens or detects possible allergens.")
+                }
             }
             .navigationTitle("Settings")
             .alert("Purchase Error", isPresented: Binding(
@@ -74,6 +94,14 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(subscriptionManager.purchaseErrorMessage ?? "Could not complete purchase.")
+            }
+            .onChange(of: positiveSoundOptionID) { _, newValue in
+                let option = ScanFeedbackSoundCatalog.positiveOption(for: newValue)
+                ScanFeedbackPlayer.play(option)
+            }
+            .onChange(of: negativeSoundOptionID) { _, newValue in
+                let option = ScanFeedbackSoundCatalog.negativeOption(for: newValue)
+                ScanFeedbackPlayer.play(option)
             }
         }
     }

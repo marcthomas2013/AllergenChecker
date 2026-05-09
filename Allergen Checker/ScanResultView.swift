@@ -13,6 +13,7 @@ struct ScanResultView: View {
 
     @State private var isSaved = false
     @State private var saveError: String?
+    @State private var isShowingFullScreenImage = false
 
     private var hasMatches: Bool {
         !result.matches.isEmpty
@@ -25,13 +26,7 @@ struct ScanResultView: View {
 
                 safetyWarningCard
 
-                ZoomableHighlightedImageView(
-                    image: result.image,
-                    matches: result.matches
-                )
-                .frame(maxWidth: .infinity)
-                .frame(height: 360)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                imagePreviewCard
 
                 if hasMatches {
                     matchesSection
@@ -48,6 +43,12 @@ struct ScanResultView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(saveError ?? "The scan could not be saved.")
+        }
+        .fullScreenCover(isPresented: $isShowingFullScreenImage) {
+            FullScreenZoomableImageView(
+                image: result.image,
+                matches: result.matches
+            )
         }
     }
 
@@ -143,6 +144,25 @@ struct ScanResultView: View {
         }
     }
 
+    private var imagePreviewCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                isShowingFullScreenImage = true
+            } label: {
+                HighlightedImageView(image: result.image, matches: result.matches)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 360)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Label("Tap image to open full screen zoom", systemImage: "arrow.up.left.and.arrow.down.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private var recognizedTextSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recognized Text")
@@ -169,70 +189,109 @@ struct ScanResultView: View {
     }
 }
 
-private struct ZoomableHighlightedImageView: View {
+private struct FullScreenZoomableImageView: View {
+    @Environment(\.dismiss) private var dismiss
+
     let image: UIImage
     let matches: [AllergenMatch]
 
-    @State private var scale: CGFloat = 1
-    @State private var lastScale: CGFloat = 1
-    @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
+    @State private var resetZoomToken = UUID()
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
+        NavigationStack {
+            ZoomableScrollView(resetZoomToken: $resetZoomToken) {
                 HighlightedImageView(image: image, matches: matches)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .scaleEffect(scale)
-                    .offset(offset)
+                    .background(Color.black.opacity(0.92))
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .contentShape(Rectangle())
-            .clipped()
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { value in
-                        scale = min(max(lastScale * value, 1), 6)
+            .background(Color.black.opacity(0.92))
+            .navigationTitle("Image Preview")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
                     }
-                    .onEnded { _ in
-                        lastScale = scale
-                        if scale == 1 {
-                            offset = .zero
-                            lastOffset = .zero
-                        }
-                    }
-            )
-            .simultaneousGesture(
-                DragGesture()
-                    .onChanged { value in
-                        guard scale > 1 else {
-                            return
-                        }
+                }
 
-                        offset = CGSize(
-                            width: lastOffset.width + value.translation.width,
-                            height: lastOffset.height + value.translation.height
-                        )
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Reset Zoom") {
+                        resetZoomToken = UUID()
                     }
-                    .onEnded { _ in
-                        lastOffset = offset
-                    }
-            )
-            .onTapGesture(count: 2) {
-                withAnimation {
-                    scale = 1
-                    lastScale = 1
-                    offset = .zero
-                    lastOffset = .zero
                 }
             }
-            .overlay(alignment: .bottomTrailing) {
-                Label("Pinch to zoom", systemImage: "plus.magnifyingglass")
-                    .font(.caption)
-                    .padding(8)
-                    .background(.regularMaterial, in: Capsule())
-                    .padding(8)
-            }
+        }
+        .tint(.white)
+        .overlay(alignment: .bottom) {
+            Label("Pinch to zoom. Drag to scroll around the image.", systemImage: "plus.magnifyingglass")
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+                .padding(.bottom, 16)
+        }
+    }
+}
+
+private struct ZoomableScrollView<Content: View>: UIViewRepresentable {
+    @Binding var resetZoomToken: UUID
+    let content: Content
+
+    init(resetZoomToken: Binding<UUID>, @ViewBuilder content: () -> Content) {
+        _resetZoomToken = resetZoomToken
+        self.content = content()
+    }
+
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+        scrollView.delegate = context.coordinator
+        scrollView.minimumZoomScale = 1
+        scrollView.maximumZoomScale = 6
+        scrollView.bouncesZoom = true
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.showsHorizontalScrollIndicator = true
+        scrollView.backgroundColor = .black
+
+        let host = context.coordinator.hostingController
+        host.view.backgroundColor = .clear
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(host.view)
+
+        NSLayoutConstraint.activate([
+            host.view.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            host.view.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            host.view.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            host.view.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+            host.view.heightAnchor.constraint(equalTo: scrollView.frameLayoutGuide.heightAnchor)
+        ])
+
+        return scrollView
+    }
+
+    func updateUIView(_ uiView: UIScrollView, context: Context) {
+        context.coordinator.hostingController.rootView = content
+
+        if context.coordinator.lastResetZoomToken != resetZoomToken {
+            context.coordinator.lastResetZoomToken = resetZoomToken
+            uiView.setZoomScale(1, animated: true)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(hostingController: UIHostingController(rootView: content))
+    }
+
+    final class Coordinator: NSObject, UIScrollViewDelegate {
+        let hostingController: UIHostingController<Content>
+        var lastResetZoomToken: UUID
+
+        init(hostingController: UIHostingController<Content>) {
+            self.hostingController = hostingController
+            self.lastResetZoomToken = UUID()
+        }
+
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+            hostingController.view
         }
     }
 }

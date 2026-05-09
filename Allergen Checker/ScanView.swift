@@ -1,3 +1,4 @@
+import AudioToolbox
 import PhotosUI
 import SwiftData
 import SwiftUI
@@ -6,6 +7,8 @@ import UIKit
 struct ScanView: View {
     @EnvironmentObject private var adsService: AdsService
     @AppStorage("selectedAllergyProfileID") private var selectedProfileID = AllergyProfileOption.defaultID
+    @AppStorage(ScanFeedbackSoundCatalog.positiveStorageKey) private var positiveSoundOptionID = ScanFeedbackSoundCatalog.defaultPositiveOptionID
+    @AppStorage(ScanFeedbackSoundCatalog.negativeStorageKey) private var negativeSoundOptionID = ScanFeedbackSoundCatalog.defaultNegativeOptionID
 
     @Query(sort: \AllergyProfile.name) private var profiles: [AllergyProfile]
     @Query(sort: \Allergen.name) private var allergens: [Allergen]
@@ -213,12 +216,28 @@ struct ScanView: View {
                     textBlocks: textBlocks,
                     matches: matches
                 )
+                playFeedback(for: matches)
                 adsService.registerCompletedScanAndPresentInterstitialIfNeeded()
             } catch {
                 errorMessage = error.localizedDescription
             }
 
             isScanning = false
+        }
+    }
+
+    private func playFeedback(for matches: [AllergenMatch]) {
+        let feedbackGenerator = UINotificationFeedbackGenerator()
+        feedbackGenerator.prepare()
+
+        if matches.isEmpty {
+            let positiveSound = ScanFeedbackSoundCatalog.positiveOption(for: positiveSoundOptionID)
+            ScanFeedbackPlayer.play(positiveSound)
+            feedbackGenerator.notificationOccurred(.success)
+        } else {
+            let negativeSound = ScanFeedbackSoundCatalog.negativeOption(for: negativeSoundOptionID)
+            ScanFeedbackPlayer.play(negativeSound)
+            feedbackGenerator.notificationOccurred(.warning)
         }
     }
 }
