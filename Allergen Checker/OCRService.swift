@@ -3,11 +3,14 @@ import Vision
 
 enum OCRServiceError: LocalizedError {
     case missingCGImage
+    case languageNotDetected
 
     var errorDescription: String? {
         switch self {
         case .missingCGImage:
             "The selected image could not be prepared for text recognition."
+        case .languageNotDetected:
+            "The label language could not be detected. Try another photo with clearer ingredient text."
         }
     }
 }
@@ -43,6 +46,7 @@ struct OCRService {
 
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
+            request.automaticallyDetectsLanguage = true
 
             let handler = VNImageRequestHandler(
                 cgImage: cgImage,

@@ -10,6 +10,7 @@ final class ScanHistoryEntry {
     @Attribute(.externalStorage) var imageData: Data = Data()
     var textBlocksData: Data = Data()
     var matchesData: Data = Data()
+    var detectedLanguageCode: String = AllergenDisplayLanguage.english.rawValue
     var matchCount: Int = 0
     var recognizedTextPreview: String = ""
 
@@ -19,6 +20,7 @@ final class ScanHistoryEntry {
         self.imageData = result.image.jpegData(compressionQuality: 0.9) ?? Data()
         self.textBlocksData = try JSONEncoder().encode(result.textBlocks.map(ScanTextBlockSnapshot.init))
         self.matchesData = try JSONEncoder().encode(result.matches.map(ScanMatchSnapshot.init))
+        self.detectedLanguageCode = result.detectedLanguage.rawValue
         self.matchCount = result.matches.count
         self.recognizedTextPreview = result.textBlocks
             .map(\.text)
@@ -35,15 +37,20 @@ final class ScanHistoryEntry {
         let matches = try JSONDecoder()
             .decode([ScanMatchSnapshot].self, from: matchesData)
             .map(\.allergenMatch)
+        let detectedLanguage = AllergenDisplayLanguage(rawValue: detectedLanguageCode) ?? .english
 
-        return ScanResult(image: image, textBlocks: textBlocks, matches: matches)
+        return ScanResult(image: image, textBlocks: textBlocks, matches: matches, detectedLanguage: detectedLanguage)
     }
 
     func rescan(using allergens: [Allergen]) throws {
         let textBlocks = try recognizedTextBlocks()
-        let matches = AllergenMatcher.matches(in: textBlocks, allergens: allergens)
+        let language = AllergenDisplayLanguage(rawValue: detectedLanguageCode)
+            ?? AllergenScanLanguageDetector.detectLanguage(in: textBlocks)
+            ?? .english
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: allergens, detectedLanguage: language)
 
         matchesData = try JSONEncoder().encode(matches.map(ScanMatchSnapshot.init))
+        detectedLanguageCode = language.rawValue
         matchCount = matches.count
     }
 

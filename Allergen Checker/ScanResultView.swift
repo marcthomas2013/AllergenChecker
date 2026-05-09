@@ -25,6 +25,7 @@ struct ScanResultView: View {
                 statusCard
 
                 safetyWarningCard
+                detectedLanguageView
 
                 imagePreviewCard
 
@@ -106,6 +107,14 @@ struct ScanResultView: View {
                 .stroke(Color.orange, lineWidth: 1)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var detectedLanguageView: some View {
+        Text("Detected label language: \(result.detectedLanguage.name)")
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(.blue)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func saveScan() {

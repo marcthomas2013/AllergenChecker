@@ -1,7 +1,11 @@
 import Foundation
 
 struct AllergenMatcher {
-    static func matches(in textBlocks: [RecognizedTextBlock], allergens: [Allergen]) -> [AllergenMatch] {
+    static func matches(
+        in textBlocks: [RecognizedTextBlock],
+        allergens: [Allergen],
+        detectedLanguage: AllergenDisplayLanguage = .english
+    ) -> [AllergenMatch] {
         var matches: [AllergenMatch] = []
         var seenMatches = Set<String>()
 
@@ -9,9 +13,9 @@ struct AllergenMatcher {
             let searchableText = normalizedSearchString(block.text)
 
             for allergen in allergens {
-                for term in allergen.searchTerms {
+                for term in localizedSearchTerms(for: allergen, language: detectedLanguage) {
                     let searchableTerm = normalizedSearchString(term)
-                    let searchableVariants = termVariants(for: searchableTerm)
+                    let searchableVariants = termVariants(for: searchableTerm, language: detectedLanguage)
 
                     guard !searchableTerm.isEmpty,
                           searchableVariants.contains(where: { containsWholeTerm($0, in: searchableText) }) else {
@@ -53,7 +57,41 @@ struct AllergenMatcher {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func termVariants(for term: String) -> [String] {
+    private static func localizedSearchTerms(for allergen: Allergen, language: AllergenDisplayLanguage) -> [String] {
+        var terms = allergen.searchTerms
+
+        if language != .english {
+            if let translatedName = translatedTerm(for: allergen.name, language: language) {
+                terms.append(translatedName)
+            }
+
+            for alias in allergen.aliases {
+                if let translatedAlias = translatedTerm(for: alias, language: language) {
+                    terms.append(translatedAlias)
+                }
+            }
+        }
+
+        var uniqueTerms: [String] = []
+        var seen = Set<String>()
+
+        for term in terms {
+            let normalized = normalizedSearchString(term)
+            guard !normalized.isEmpty, seen.insert(normalized).inserted else {
+                continue
+            }
+
+            uniqueTerms.append(term)
+        }
+
+        return uniqueTerms
+    }
+
+    private static func termVariants(for term: String, language: AllergenDisplayLanguage) -> [String] {
+        guard language == .english else {
+            return nonEnglishTermVariants(for: term)
+        }
+
         var variants = [term]
 
         if let plural = variant(of: term, using: pluralizedWord) {
@@ -62,6 +100,41 @@ struct AllergenMatcher {
 
         if let singular = variant(of: term, using: singularizedWord) {
             variants.append(singular)
+        }
+
+        return Array(Set(variants))
+    }
+
+    private static func translatedTerm(for term: String, language: AllergenDisplayLanguage) -> String? {
+        if let directTranslation = AllergenTranslationCatalog.translation(for: term, language: language) {
+            return directTranslation
+        }
+
+        let normalized = normalizedSearchString(term)
+        guard !normalized.isEmpty else {
+            return nil
+        }
+
+        if let singular = singularizedWord(normalized),
+           let singularTranslation = AllergenTranslationCatalog.translation(for: singular, language: language) {
+            return singularTranslation
+        }
+
+        if let plural = pluralizedWord(normalized),
+           let pluralTranslation = AllergenTranslationCatalog.translation(for: plural, language: language) {
+            return pluralTranslation
+        }
+
+        return nil
+    }
+
+    private static func nonEnglishTermVariants(for term: String) -> [String] {
+        var variants = [term]
+
+        if term.hasSuffix("s"), term.count > 1 {
+            variants.append(String(term.dropLast()))
+        } else {
+            variants.append(term + "s")
         }
 
         return Array(Set(variants))

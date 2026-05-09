@@ -209,12 +209,21 @@ struct ScanView: View {
         Task {
             do {
                 let textBlocks = try await ocrService.recognizeText(in: image)
-                let matches = AllergenMatcher.matches(in: textBlocks, allergens: profileAllergens)
+                guard let detectedLanguage = AllergenScanLanguageDetector.detectLanguage(in: textBlocks) else {
+                    throw OCRServiceError.languageNotDetected
+                }
+
+                let matches = AllergenMatcher.matches(
+                    in: textBlocks,
+                    allergens: profileAllergens,
+                    detectedLanguage: detectedLanguage
+                )
 
                 scanResult = ScanResult(
                     image: image,
                     textBlocks: textBlocks,
-                    matches: matches
+                    matches: matches,
+                    detectedLanguage: detectedLanguage
                 )
                 playFeedback(for: matches)
                 adsService.registerCompletedScanAndPresentInterstitialIfNeeded()
@@ -246,6 +255,7 @@ struct ScanResult {
     let image: UIImage
     let textBlocks: [RecognizedTextBlock]
     let matches: [AllergenMatch]
+    let detectedLanguage: AllergenDisplayLanguage
 }
 
 #Preview {
