@@ -207,26 +207,29 @@ struct Allergen_CheckerTests {
 
             for language in targetLanguages {
                 for term in terms {
-                    guard let translated = AllergenTranslationCatalog.translation(for: term, language: language) else {
+                    let translatedTerms = AllergenTranslationCatalog.translations(for: term, language: language)
+                    guard !translatedTerms.isEmpty else {
                         continue
                     }
 
-                    translationCountByLanguage[language, default: 0] += 1
+                    for translated in translatedTerms {
+                        translationCountByLanguage[language, default: 0] += 1
 
-                    let directMatches = matches(
-                        allergen: allergen,
-                        text: "Ingredients: \(translated)",
-                        detectedLanguage: language
-                    )
-                    #expect(!directMatches.isEmpty, "\(common.name) translation did not match for \(language.name): \(translated)")
-
-                    if let translatedVariant = nonEnglishInflectionVariant(for: translated) {
-                        let variantMatches = matches(
+                        let directMatches = matches(
                             allergen: allergen,
-                            text: "Ingredients: \(translatedVariant)",
+                            text: "Ingredients: \(translated)",
                             detectedLanguage: language
                         )
-                        #expect(!variantMatches.isEmpty, "\(common.name) translation variant did not match for \(language.name): \(translated) -> \(translatedVariant)")
+                        #expect(!directMatches.isEmpty, "\(common.name) translation did not match for \(language.name): \(translated)")
+
+                        if let translatedVariant = nonEnglishInflectionVariant(for: translated) {
+                            let variantMatches = matches(
+                                allergen: allergen,
+                                text: "Ingredients: \(translatedVariant)",
+                                detectedLanguage: language
+                            )
+                            #expect(!variantMatches.isEmpty, "\(common.name) translation variant did not match for \(language.name): \(translated) -> \(translatedVariant)")
+                        }
                     }
                 }
             }

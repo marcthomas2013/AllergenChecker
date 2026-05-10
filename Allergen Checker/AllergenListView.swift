@@ -11,6 +11,7 @@ struct AllergenListView: View {
     @State private var searchText = ""
     @State private var isAddingAllergen = false
     @State private var isManagingPeople = false
+    @State private var debugLanguage: AllergenDisplayLanguage = .english
 
     private var selectedProfile: AllergyProfileOption {
         AllergyProfileSelection.selectedOption(storedID: selectedProfileID, profiles: profiles)
@@ -78,6 +79,14 @@ struct AllergenListView: View {
             allergen.name.localizedCaseInsensitiveContains(query)
                 || allergen.aliases.contains { $0.localizedCaseInsensitiveContains(query) }
                 || allergen.notes.localizedCaseInsensitiveContains(query)
+                || debugLanguage != .english && (
+                    AllergenTranslationCatalog.translations(for: allergen.name, language: debugLanguage)
+                        .contains(where: { $0.localizedCaseInsensitiveContains(query) })
+                        || allergen.aliases.contains {
+                            AllergenTranslationCatalog.translations(for: $0, language: debugLanguage)
+                                .contains(where: { $0.localizedCaseInsensitiveContains(query) })
+                        }
+                )
         }
     }
 
@@ -90,7 +99,7 @@ struct AllergenListView: View {
                             NavigationLink {
                                 AllergenEditorView(allergen: allergen)
                             } label: {
-                                AllergenRow(allergen: allergen)
+                                AllergenRow(allergen: allergen, displayLanguage: debugLanguage)
                             }
                         }
                         .onDelete(perform: deleteAllergens)
@@ -112,9 +121,11 @@ struct AllergenListView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(filteredQuickAddCommonAllergens) { allergen in
-                            QuickAddAllergenRow(allergen: allergen) {
-                                addCommonAllergen(allergen)
-                            }
+                            QuickAddAllergenRow(
+                                allergen: allergen,
+                                add: { addCommonAllergen(allergen) },
+                                displayLanguage: debugLanguage
+                            )
                         }
                     }
                 } header: {
@@ -129,9 +140,11 @@ struct AllergenListView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(filteredQuickAddENumberIngredients) { allergen in
-                            QuickAddAllergenRow(allergen: allergen) {
-                                addCommonAllergen(allergen)
-                            }
+                            QuickAddAllergenRow(
+                                allergen: allergen,
+                                add: { addCommonAllergen(allergen) },
+                                displayLanguage: debugLanguage
+                            )
                         }
                     }
                 } header: {
@@ -155,7 +168,23 @@ struct AllergenListView: View {
                     AllergyProfilePicker(profiles: profiles, selectedProfileID: $selectedProfileID)
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Menu {
+                        ForEach(AllergenDisplayLanguage.allCases) { language in
+                            Button {
+                                debugLanguage = language
+                            } label: {
+                                if debugLanguage == language {
+                                    Label(language.name, systemImage: "checkmark")
+                                } else {
+                                    Text(language.name)
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Debug Language: \(debugLanguage.name)", systemImage: "globe")
+                    }
+
                     Button {
                         isAddingAllergen = true
                     } label: {
@@ -201,14 +230,29 @@ struct AllergenListView: View {
 
 private struct AllergenRow: View {
     let allergen: Allergen
+    let displayLanguage: AllergenDisplayLanguage
+
+    private var translatedNames: [String] {
+        AllergenTranslationCatalog.translations(for: allergen.name, language: displayLanguage)
+    }
+
+    private var translatedAliases: [String] {
+        allergen.aliases.flatMap { AllergenTranslationCatalog.translations(for: $0, language: displayLanguage) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(allergen.name)
+            Text(displayLanguage == .english ? allergen.name : translatedNames.joined(separator: ", ").ifEmpty(allergen.name))
                 .font(.headline)
 
+            if displayLanguage != .english {
+                Text(allergen.name)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
             if !allergen.aliases.isEmpty {
-                Text(allergen.aliases.joined(separator: ", "))
+                Text((displayLanguage == .english || translatedAliases.isEmpty ? allergen.aliases : translatedAliases).joined(separator: ", "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -221,15 +265,30 @@ private struct AllergenRow: View {
 private struct QuickAddAllergenRow: View {
     let allergen: CommonAllergen
     let add: () -> Void
+    let displayLanguage: AllergenDisplayLanguage
+
+    private var translatedNames: [String] {
+        AllergenTranslationCatalog.translations(for: allergen.name, language: displayLanguage)
+    }
+
+    private var translatedAliases: [String] {
+        allergen.aliases.flatMap { AllergenTranslationCatalog.translations(for: $0, language: displayLanguage) }
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(allergen.name)
+                Text(displayLanguage == .english ? allergen.name : translatedNames.joined(separator: ", ").ifEmpty(allergen.name))
                     .font(.headline)
 
+                if displayLanguage != .english {
+                    Text(allergen.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 if !allergen.aliases.isEmpty {
-                    Text(allergen.aliases.joined(separator: ", "))
+                    Text((displayLanguage == .english || translatedAliases.isEmpty ? allergen.aliases : translatedAliases).joined(separator: ", "))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -247,6 +306,12 @@ private struct QuickAddAllergenRow: View {
             .accessibilityLabel(Text("Add \(allergen.name)"))
         }
         .padding(.vertical, 4)
+    }
+}
+
+private extension String {
+    func ifEmpty(_ fallback: String) -> String {
+        isEmpty ? fallback : self
     }
 }
 

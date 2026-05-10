@@ -65,14 +65,10 @@ struct AllergenMatcher {
         var terms = allergen.searchTerms
 
         if language != .english {
-            if let translatedName = translatedTerm(for: allergen.name, language: language) {
-                terms.append(translatedName)
-            }
+            terms.append(contentsOf: translatedTerms(for: allergen.name, language: language))
 
             for alias in allergen.aliases {
-                if let translatedAlias = translatedTerm(for: alias, language: language) {
-                    terms.append(translatedAlias)
-                }
+                terms.append(contentsOf: translatedTerms(for: alias, language: language))
             }
         }
 
@@ -109,27 +105,36 @@ struct AllergenMatcher {
         return Array(Set(variants))
     }
 
-    private static func translatedTerm(for term: String, language: AllergenDisplayLanguage) -> String? {
-        if let directTranslation = AllergenTranslationCatalog.translation(for: term, language: language) {
-            return directTranslation
-        }
+    private static func translatedTerms(for term: String, language: AllergenDisplayLanguage) -> [String] {
+        var candidates = Set<String>()
 
         let normalized = normalizedSearchString(term)
         guard !normalized.isEmpty else {
-            return nil
+            return []
         }
 
-        if let singular = singularizedWord(normalized),
-           let singularTranslation = AllergenTranslationCatalog.translation(for: singular, language: language) {
-            return singularTranslation
+        candidates.insert(normalized)
+        if let singular = singularizedWord(normalized) {
+            candidates.insert(singular)
+        }
+        if let plural = pluralizedWord(normalized) {
+            candidates.insert(plural)
         }
 
-        if let plural = pluralizedWord(normalized),
-           let pluralTranslation = AllergenTranslationCatalog.translation(for: plural, language: language) {
-            return pluralTranslation
+        var translatedTerms: [String] = []
+        var seen = Set<String>()
+
+        for candidate in candidates {
+            for translated in AllergenTranslationCatalog.translations(for: candidate, language: language) {
+                let normalizedTranslated = normalizedSearchString(translated)
+                guard !normalizedTranslated.isEmpty, seen.insert(normalizedTranslated).inserted else {
+                    continue
+                }
+                translatedTerms.append(translated)
+            }
         }
 
-        return nil
+        return translatedTerms
     }
 
     private static func nonEnglishTermVariants(for term: String) -> [String] {

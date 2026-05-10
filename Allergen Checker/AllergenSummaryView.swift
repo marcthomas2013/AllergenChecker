@@ -256,9 +256,35 @@ enum AllergenDisplayLanguage: String, CaseIterable, Identifiable {
 
 enum AllergenTranslationCatalog {
     private typealias TranslationSet = [AllergenDisplayLanguage: String]
+    private typealias TranslationSynonymSet = [AllergenDisplayLanguage: [String]]
 
     static func translation(for allergenName: String, language: AllergenDisplayLanguage) -> String? {
-        translations[AllergenMatcher.normalizedSearchString(allergenName)]?[language]
+        translations(for: allergenName, language: language).first
+    }
+
+    static func translations(for allergenName: String, language: AllergenDisplayLanguage) -> [String] {
+        let normalized = AllergenMatcher.normalizedSearchString(allergenName)
+        guard !normalized.isEmpty else {
+            return []
+        }
+
+        let primaryTranslation = translations[normalized]?[language].map { [$0] } ?? []
+        let alternateTranslations = translationSynonyms[normalized]?[language] ?? []
+
+        var uniqueTranslations: [String] = []
+        var seenNormalizedTranslations = Set<String>()
+
+        for translation in primaryTranslation + alternateTranslations {
+            let normalizedTranslation = AllergenMatcher.normalizedSearchString(translation)
+            guard !normalizedTranslation.isEmpty,
+                  seenNormalizedTranslations.insert(normalizedTranslation).inserted else {
+                continue
+            }
+
+            uniqueTranslations.append(translation)
+        }
+
+        return uniqueTranslations
     }
 
     private static let translations: [String: TranslationSet] = [
@@ -320,6 +346,12 @@ enum AllergenTranslationCatalog {
         "carotenes e160a": [.french: "Carotenes (E160a)", .spanish: "Carotenos (E160a)", .german: "Carotine (E160a)", .italian: "Caroteni (E160a)", .portuguese: "Carotenos (E160a)", .dutch: "Carotenen (E160a)", .polish: "Karoteny (E160a)"],
         "annatto e160b": [.french: "Annatto (E160b)", .spanish: "Achiote (E160b)", .german: "Annatto (E160b)", .italian: "Annatto (E160b)", .portuguese: "Urucum (E160b)", .dutch: "Annatto (E160b)", .polish: "Annato (E160b)"],
         "glutamates and msg e620 e625": [.french: "Glutamates et MSG (E620-E625)", .spanish: "Glutamatos y MSG (E620-E625)", .german: "Glutamate und MSG (E620-E625)", .italian: "Glutammati e MSG (E620-E625)", .portuguese: "Glutamatos e MSG (E620-E625)", .dutch: "Glutamaten en MSG (E620-E625)", .polish: "Glutaminiany i MSG (E620-E625)"]
+    ]
+
+    private static let translationSynonyms: [String: TranslationSynonymSet] = [
+        "peanuts": [
+            .french: ["Cacahuetes"]
+        ]
     ]
 }
 
