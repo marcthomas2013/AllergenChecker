@@ -109,6 +109,8 @@ struct AdsBannerContainer: View {
 struct AdInsetContent<Content: View>: View {
     @EnvironmentObject private var adsService: AdsService
     private let content: Content
+    private let bannerHeight: CGFloat = 50
+    private let bannerSpacing: CGFloat = 8
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
@@ -116,11 +118,14 @@ struct AdInsetContent<Content: View>: View {
 
     var body: some View {
         content
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .padding(.bottom, adsService.showsAds ? bannerHeight + bannerSpacing : 0)
+            .overlay(alignment: .bottom) {
                 if adsService.showsAds {
                     AdsBannerContainer()
                         .environmentObject(adsService)
                         .frame(maxWidth: .infinity)
+                        .frame(height: bannerHeight)
+                        .padding(.top, bannerSpacing)
                         .background(.bar)
                 }
             }
