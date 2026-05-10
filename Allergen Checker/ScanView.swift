@@ -19,6 +19,8 @@ struct ScanView: View {
     @State private var isScanning = false
     @State private var scanResult: ScanResult?
     @State private var errorMessage: String?
+    @State private var pendingForeignIngredientScan: PendingForeignIngredientScan?
+    @State private var isShowingForeignIngredientWarning = false
 
     private let ocrService = OCRService()
 
@@ -81,6 +83,22 @@ struct ScanView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "Something went wrong while scanning the image.")
+            }
+            .alert("Experimental Foreign Ingredient Search", isPresented: $isShowingForeignIngredientWarning) {
+                Button("Cancel", role: .cancel) {
+                    pendingForeignIngredientScan = nil
+                }
+
+                Button("Continue") {
+                    guard let pendingForeignIngredientScan else {
+                        return
+                    }
+
+                    completeScan(using: pendingForeignIngredientScan)
+                    self.pendingForeignIngredientScan = nil
+                }
+            } message: {
+                Text("Foreign ingredient search is an experimental feature and still has recognition issues to resolve. For example, OCR has read œuf as ceuf. Please double-check all results.")
             }
             .sheet(isPresented: $isShowingCamera) {
                 ImagePicker(sourceType: .camera) { image in
@@ -213,26 +231,45 @@ struct ScanView: View {
                     throw OCRServiceError.languageNotDetected
                 }
 
-                let matches = AllergenMatcher.matches(
-                    in: textBlocks,
-                    allergens: profileAllergens,
-                    detectedLanguage: detectedLanguage
-                )
-
-                scanResult = ScanResult(
-                    image: image,
-                    textBlocks: textBlocks,
-                    matches: matches,
-                    detectedLanguage: detectedLanguage
-                )
-                playFeedback(for: matches)
-                adsService.registerCompletedScanAndPresentInterstitialIfNeeded()
+                if detectedLanguage != .english {
+                    pendingForeignIngredientScan = PendingForeignIngredientScan(
+                        image: image,
+                        textBlocks: textBlocks,
+                        detectedLanguage: detectedLanguage
+                    )
+                    isShowingForeignIngredientWarning = true
+                } else {
+                    completeScan(
+                        using: PendingForeignIngredientScan(
+                            image: image,
+                            textBlocks: textBlocks,
+                            detectedLanguage: detectedLanguage
+                        )
+                    )
+                }
             } catch {
                 errorMessage = error.localizedDescription
             }
 
             isScanning = false
         }
+    }
+
+    private func completeScan(using pendingScan: PendingForeignIngredientScan) {
+        let matches = AllergenMatcher.matches(
+            in: pendingScan.textBlocks,
+            allergens: profileAllergens,
+            detectedLanguage: pendingScan.detectedLanguage
+        )
+
+        scanResult = ScanResult(
+            image: pendingScan.image,
+            textBlocks: pendingScan.textBlocks,
+            matches: matches,
+            detectedLanguage: pendingScan.detectedLanguage
+        )
+        playFeedback(for: matches)
+        adsService.registerCompletedScanAndPresentInterstitialIfNeeded()
     }
 
     private func playFeedback(for matches: [AllergenMatch]) {
@@ -249,6 +286,12 @@ struct ScanView: View {
             feedbackGenerator.notificationOccurred(.warning)
         }
     }
+}
+
+private struct PendingForeignIngredientScan {
+    let image: UIImage
+    let textBlocks: [RecognizedTextBlock]
+    let detectedLanguage: AllergenDisplayLanguage
 }
 
 struct ScanResult {
