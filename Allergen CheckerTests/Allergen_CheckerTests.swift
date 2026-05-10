@@ -132,6 +132,38 @@ struct Allergen_CheckerTests {
     }
 
     @MainActor
+    @Test func frenchLigatureOeMatchesTranslatedEggTerms() {
+        let allergen = Allergen(name: "Eggs")
+        let textBlocks = [
+            RecognizedTextBlock(
+                text: "Ingredients: protéine d'œuf",
+                confidence: 0.95,
+                boundingBox: .zero
+            )
+        ]
+
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: [allergen], detectedLanguage: .french)
+
+        #expect(matches.count == 1)
+    }
+
+    @MainActor
+    @Test func frenchOcrCeufVariantMatchesTranslatedEggTerms() {
+        let allergen = Allergen(name: "Eggs")
+        let textBlocks = [
+            RecognizedTextBlock(
+                text: "Ingredients: proteine de ceuf",
+                confidence: 0.95,
+                boundingBox: .zero
+            )
+        ]
+
+        let matches = AllergenMatcher.matches(in: textBlocks, allergens: [allergen], detectedLanguage: .french)
+
+        #expect(matches.count == 1)
+    }
+
+    @MainActor
     @Test func englishDefaultMatchingCoversAllCatalogAllergensAndAliases() {
         let catalogAllergens = CommonAllergenCatalog.allergens + CommonAllergenCatalog.eNumberIngredients
 

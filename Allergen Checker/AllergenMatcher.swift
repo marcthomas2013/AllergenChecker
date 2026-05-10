@@ -52,6 +52,10 @@ struct AllergenMatcher {
     static func normalizedSearchString(_ value: String) -> String {
         value
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .replacingOccurrences(of: "œ", with: "oe")
+            .replacingOccurrences(of: "Œ", with: "oe")
+            .replacingOccurrences(of: "æ", with: "ae")
+            .replacingOccurrences(of: "Æ", with: "ae")
             .lowercased()
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -135,6 +139,11 @@ struct AllergenMatcher {
             variants.append(String(term.dropLast()))
         } else {
             variants.append(term + "s")
+        }
+
+        // OCR sometimes misreads leading "oe" as "ce" (e.g. "oeuf" -> "ceuf").
+        for variant in variants where variant.hasPrefix("oe") && variant.count > 2 {
+            variants.append("c" + variant.dropFirst())
         }
 
         return Array(Set(variants))
