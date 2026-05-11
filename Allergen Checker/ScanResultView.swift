@@ -27,11 +27,11 @@ struct ScanResultView: View {
                 safetyWarningCard
                 detectedLanguageView
 
-                imagePreviewCard
-
                 if hasMatches {
                     matchesSection
                 }
+                
+                imagePreviewCard
 
                 recognizedTextSection
             }
@@ -62,11 +62,6 @@ struct ScanResultView: View {
             .font(.title3)
             .fontWeight(.semibold)
             .foregroundStyle(hasMatches ? .red : .green)
-
-            Text(hasMatches
-                 ? String(localized: "Review the highlighted label areas before deciding whether the product is safe for you.")
-                 : String(localized: "No text matched your saved allergen names or aliases."))
-                .foregroundStyle(.secondary)
 
             if allowsSaving {
                 Button {
@@ -128,15 +123,36 @@ struct ScanResultView: View {
         }
     }
 
+    private func displayConfidencePercentage(for confidence: Float) -> Int {
+        let roundedPercentage = Int((confidence * 100).rounded())
+        return min(99, max(0, roundedPercentage))
+    }
+
+    private func confidenceColor(for confidence: Float) -> Color {
+        confidence < 0.5 ? .orange : .secondary
+    }
+
     private var matchesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Matches")
                 .font(.headline)
 
             ForEach(result.matches) { match in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(match.allergenName)
-                        .font(.headline)
+                let confidencePercentage = displayConfidencePercentage(for: match.confidence)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(match.allergenName)
+                            .font(.headline)
+
+                        Spacer(minLength: 0)
+
+                        Text("\(confidencePercentage)%")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .monospacedDigit()
+                            .foregroundStyle(confidenceColor(for: match.confidence))
+                    }
 
                     Text(explanationService.explanation(for: match))
                         .font(.subheadline)
@@ -186,9 +202,9 @@ struct ScanResultView: View {
                         Text(block.text)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text("\(Int((block.confidence * 100).rounded()))%")
+                        Text("\(displayConfidencePercentage(for: block.confidence))%")
                             .font(.caption)
-                            .foregroundStyle(block.confidence < 0.5 ? .orange : .secondary)
+                            .foregroundStyle(confidenceColor(for: block.confidence))
                     }
                     .font(.subheadline)
                     .padding(.vertical, 4)

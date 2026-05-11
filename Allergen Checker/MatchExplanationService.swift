@@ -6,7 +6,7 @@ protocol MatchExplaining {
 
 struct LocalMatchExplanationService: MatchExplaining {
     func explanation(for match: AllergenMatch) -> String {
-        let confidence = Int((match.confidence * 100).rounded())
+        let confidence = displayConfidencePercentage(for: match.confidence)
 
         if match.matchedTerm.localizedCaseInsensitiveCompare(match.allergenName) == .orderedSame {
             return String(
@@ -22,5 +22,10 @@ struct LocalMatchExplanationService: MatchExplaining {
             match.allergenName,
             confidence
         )
+    }
+
+    private func displayConfidencePercentage(for confidence: Float) -> Int {
+        let roundedPercentage = Int((confidence * 100).rounded())
+        return min(99, max(0, roundedPercentage))
     }
 }
