@@ -36,15 +36,15 @@ struct ProfileManagementView: View {
         NavigationStack {
             Form {
                 Section("Add Person") {
-                    TextField("Name", text: $newPersonName)
-                        .textInputAutocapitalization(.words)
+                    HStack {
+                        TextField("Name", text: $newPersonName)
+                            .textInputAutocapitalization(.words)
 
-                    Button {
-                        addPerson()
-                    } label: {
-                        Label("Add Person", systemImage: "plus")
+                        Button("Add") {
+                            addPerson()
+                        }
+                        .disabled(trimmedNewPersonName.isEmpty)
                     }
-                    .disabled(trimmedNewPersonName.isEmpty)
                 }
 
                 Section {
