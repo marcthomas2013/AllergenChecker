@@ -9,8 +9,6 @@ struct ScanResultView: View {
     var profileID: UUID? = nil
     var allowsSaving = true
 
-    private let explanationService = LocalMatchExplanationService()
-
     @State private var isSaved = false
     @State private var saveError: String?
     @State private var isShowingFullScreenImage = false
@@ -19,12 +17,46 @@ struct ScanResultView: View {
         !result.matches.isEmpty
     }
 
+    private var groupedMatches: [GroupedAllergenMatch] {
+        var groupedByAllergen: [String: [AllergenMatch]] = [:]
+
+        for match in result.matches {
+            groupedByAllergen[match.allergenName, default: []].append(match)
+        }
+
+        return groupedByAllergen
+            .map { allergenName, matches in
+                var recognizedTexts: [String] = []
+                var seenNormalizedTexts = Set<String>()
+
+                for match in matches {
+                    let normalized = AllergenMatcher.normalizedSearchString(match.recognizedText)
+                    guard seenNormalizedTexts.insert(normalized).inserted else {
+                        continue
+                    }
+
+                    recognizedTexts.append(match.recognizedText)
+                }
+
+                let highestConfidence = matches.map(\.confidence).max() ?? 0
+
+                return GroupedAllergenMatch(
+                    allergenName: allergenName,
+                    recognizedTexts: recognizedTexts,
+                    highestConfidence: highestConfidence
+                )
+            }
+            .sorted {
+                $0.allergenName.localizedCaseInsensitiveCompare($1.allergenName) == .orderedAscending
+            }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                statusCard
-
                 safetyWarningCard
+                
+                statusCard
                 detectedLanguageView
 
                 if hasMatches {
@@ -137,12 +169,12 @@ struct ScanResultView: View {
             Text("Matches")
                 .font(.headline)
 
-            ForEach(result.matches) { match in
-                let confidencePercentage = displayConfidencePercentage(for: match.confidence)
+            ForEach(groupedMatches) { groupedMatch in
+                let confidencePercentage = displayConfidencePercentage(for: groupedMatch.highestConfidence)
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text(match.allergenName)
+                        Text(groupedMatch.allergenName)
                             .font(.headline)
 
                         Spacer(minLength: 0)
@@ -151,16 +183,18 @@ struct ScanResultView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                             .monospacedDigit()
-                            .foregroundStyle(confidenceColor(for: match.confidence))
+                            .foregroundStyle(confidenceColor(for: groupedMatch.highestConfidence))
                     }
 
-                    Text(explanationService.explanation(for: match))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    Text("Recognized text: \(match.recognizedText)")
+                    Text("Recognized text:")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    ForEach(groupedMatch.recognizedTexts, id: \.self) { recognizedText in
+                        Text("• \(recognizedText)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
@@ -211,6 +245,16 @@ struct ScanResultView: View {
                 }
             }
         }
+    }
+}
+
+private struct GroupedAllergenMatch: Identifiable {
+    let allergenName: String
+    let recognizedTexts: [String]
+    let highestConfidence: Float
+
+    var id: String {
+        allergenName
     }
 }
 
