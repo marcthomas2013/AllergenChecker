@@ -49,6 +49,14 @@ struct SettingsView: View {
                         }
                     }
 
+                    Button("Reload Subscription Products") {
+                        Task {
+                            await subscriptionManager.loadProducts()
+                            await subscriptionManager.refreshSubscriptionStatus()
+                        }
+                    }
+                    .disabled(subscriptionManager.isLoadingProducts || subscriptionManager.isPurchasing)
+
                     Button("Restore Purchases") {
                         Task {
                             await subscriptionManager.restorePurchases()
@@ -60,6 +68,21 @@ struct SettingsView: View {
                 } footer: {
                     Text("While subscribed, ads are removed. If the subscription is cancelled or expires, ads return automatically.")
                 }
+
+#if DEBUG
+                Section("Subscription Debug") {
+                    if subscriptionManager.debugMessages.isEmpty {
+                        Text("No subscription debug logs yet.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(subscriptionManager.debugMessages, id: \.self) { message in
+                            Text(message)
+                                .font(.caption.monospaced())
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+#endif
 
                 Section {
                     LabeledContent("Version", value: appVersion)

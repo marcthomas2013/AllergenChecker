@@ -3,7 +3,7 @@ import Foundation
 enum MonetizationConfig {
     enum Subscription {
         // Replace these with your App Store Connect product identifiers.
-        static let monthlyProductID = "uk.co.thethomashouse.allergenchecker.removeads.monthly"
+        static let monthlyProductID = "uk.co.thethomashouse.allergenchecker.adremoval.monthly"
         static let annualProductID = "uk.co.thethomashouse.allergenchecker.removeads.annual"
         static let productIDs: Set<String> = [monthlyProductID, annualProductID]
     }
